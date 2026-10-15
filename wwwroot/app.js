@@ -124,6 +124,13 @@ function updateFavoriteIconsOnPage(mealId) {
 
 // --- Allergens & Intolerances ---
 
+function toggleAllergenDrawer() {
+  const drawer = document.getElementById('allergen-drawer');
+  if (drawer) {
+    drawer.classList.toggle('hidden');
+  }
+}
+
 function toggleAllergenFilter(allergen) {
   if (state.excludedAllergens.has(allergen)) {
     state.excludedAllergens.delete(allergen);
@@ -144,20 +151,32 @@ function resetAllergenFilters() {
 
 function updateAllergenPillStyles() {
   const resetBtn = document.getElementById('btn-reset-allergens');
+  const countBadge = document.getElementById('allergen-count-badge');
+  const activeCount = state.excludedAllergens.size;
+
   if (resetBtn) {
-    if (state.excludedAllergens.size > 0) {
+    if (activeCount > 0) {
       resetBtn.classList.remove('hidden');
     } else {
       resetBtn.classList.add('hidden');
     }
   }
 
+  if (countBadge) {
+    if (activeCount > 0) {
+      countBadge.innerText = activeCount;
+      countBadge.classList.remove('hidden');
+    } else {
+      countBadge.classList.add('hidden');
+    }
+  }
+
   document.querySelectorAll('.allergen-pill').forEach(btn => {
     const allergen = btn.getAttribute('data-allergen');
     if (state.excludedAllergens.has(allergen)) {
-      btn.className = 'allergen-pill px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 ring-2 ring-amber-400/40 transition flex items-center gap-1 cursor-pointer';
+      btn.className = 'allergen-pill px-2.5 py-0.5 rounded-md text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 ring-1 ring-amber-400 transition cursor-pointer';
     } else {
-      btn.className = 'allergen-pill px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 border border-transparent transition flex items-center gap-1 cursor-pointer';
+      btn.className = 'allergen-pill px-2.5 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 border border-transparent transition cursor-pointer';
     }
   });
 }
@@ -386,6 +405,8 @@ function renderWeeklyCalendarGrid() {
 
     const dayTotalCalories = dayMeals.reduce((acc, m) => acc + (m.nutrition?.calories || 550), 0);
     const dayTotalProtein = dayMeals.reduce((acc, m) => acc + (m.nutrition?.protein || 25), 0);
+    const dayTotalCarbs = dayMeals.reduce((acc, m) => acc + (m.nutrition?.carbs || 50), 0);
+    const dayTotalFat = dayMeals.reduce((acc, m) => acc + (m.nutrition?.fat || 20), 0);
 
     return `
       <div class="calendar-day-col bg-white rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between overflow-hidden ${day.isToday ? 'ring-2 ring-red-500 shadow-xs' : ''}">
@@ -409,9 +430,15 @@ function renderWeeklyCalendarGrid() {
         </div>
 
         <!-- Day Footer Summary -->
-        <div class="px-2 py-1 bg-slate-50 border-t border-slate-100 text-[10px] text-slate-500 font-bold flex items-center justify-between">
-          <span title="Tageskalorien">🔥 ${dayTotalCalories} kcal</span>
-          <span title="Tagesprotein">💪 ${dayTotalProtein}g P</span>
+        <div class="px-2 py-1.5 bg-slate-50 border-t border-slate-100 text-[10px] text-slate-600 font-semibold flex flex-col gap-0.5">
+          <div class="flex items-center justify-between font-bold text-slate-800">
+            <span title="Tageskalorien">🔥 ${dayTotalCalories} kcal</span>
+            <span title="Tagesprotein" class="text-blue-700">${dayTotalProtein}g P</span>
+          </div>
+          <div class="flex items-center justify-between text-[9px] text-slate-400 font-medium">
+            <span title="Kohlenhydrate">${dayTotalCarbs}g KH</span>
+            <span title="Fett">${dayTotalFat}g F</span>
+          </div>
         </div>
       </div>
     `;
@@ -424,39 +451,27 @@ function renderCalendarMealCard(meal, dayIndex, type, titleLabel, weekIndex) {
   const n = meal.nutrition || { calories: 550, protein: 25, carbs: 55, fat: 22, fiber: 5 };
   const isFav = state.favorites.has(meal.id);
 
-  // Allergens chips
-  const allergenBadges = [];
-  if (meal.allergens && meal.allergens.length > 0) {
-    if (meal.allergens.includes('gluten')) allergenBadges.push('<span class="text-[8px] px-1 py-0.2 rounded bg-amber-50 text-amber-800 border border-amber-200">🌾 Gluten</span>');
-    if (meal.allergens.includes('lactose')) allergenBadges.push('<span class="text-[8px] px-1 py-0.2 rounded bg-blue-50 text-blue-800 border border-blue-200">🥛 Laktose</span>');
-    if (meal.allergens.includes('egg')) allergenBadges.push('<span class="text-[8px] px-1 py-0.2 rounded bg-yellow-50 text-yellow-800 border border-yellow-200">🥚 Ei</span>');
-    if (meal.allergens.includes('fish')) allergenBadges.push('<span class="text-[8px] px-1 py-0.2 rounded bg-cyan-50 text-cyan-800 border border-cyan-200">🐟 Fisch</span>');
-    if (meal.allergens.includes('nuts')) allergenBadges.push('<span class="text-[8px] px-1 py-0.2 rounded bg-orange-50 text-orange-800 border border-orange-200">🥜 Nüsse</span>');
-  } else {
-    allergenBadges.push('<span class="text-[8px] px-1 py-0.2 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">✅ Frei</span>');
-  }
-
-  // Diet chip
+  // Subtle Diet badge
   let dietBadge = '';
   if (meal.tags.includes('vegan')) {
-    dietBadge = '<span class="text-[8px] font-bold px-1 py-0.2 rounded bg-emerald-100 text-emerald-800">🌿 Vegan</span>';
+    dietBadge = '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200/60">🌿 Vegan</span>';
   } else if (meal.tags.includes('vegetarian')) {
-    dietBadge = '<span class="text-[8px] font-bold px-1 py-0.2 rounded bg-green-100 text-green-800">🌱 Veggie</span>';
+    dietBadge = '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-green-50 text-green-700 border border-green-200/60">🌱 Veggie</span>';
   }
 
   return `
-    <div class="calendar-meal-card bg-slate-50/70 hover:bg-white p-2 rounded-lg border border-slate-200/80 hover:border-slate-300 hover:shadow-2xs transition relative group flex flex-col justify-between">
+    <div class="calendar-meal-card bg-slate-50/70 hover:bg-white p-2.5 rounded-xl border border-slate-200/90 hover:border-slate-300 hover:shadow-xs transition relative group flex flex-col justify-between">
       <div>
-        <!-- Slot Label & Quick Actions -->
-        <div class="flex items-center justify-between gap-1 mb-1">
-          <div class="flex items-center gap-1">
-            <span class="text-[9px] font-extrabold text-red-700 uppercase tracking-wider">${titleLabel}</span>
+        <!-- Slot Header & Action Buttons -->
+        <div class="flex items-center justify-between gap-1 mb-1.5">
+          <div class="flex items-center gap-1.5">
+            <span class="text-[9px] font-black text-red-700 uppercase tracking-wider">${titleLabel}</span>
             ${dietBadge}
           </div>
-          <div class="flex items-center">
+          <div class="flex items-center gap-0.5">
             <!-- Favorite toggle -->
             <button onclick="toggleFavorite('${meal.id}', event)" title="Favorit umschalten" class="fav-btn-${meal.id} ${isFav ? 'text-red-500' : 'text-slate-300'} hover:text-red-500 p-0.5 rounded transition cursor-pointer">
-              <span class="fav-icon text-[11px] select-none leading-none">${isFav ? '❤️' : '🤍'}</span>
+              <span class="fav-icon text-xs select-none leading-none">${isFav ? '❤️' : '🤍'}</span>
             </button>
             <!-- Reroll button -->
             <button onclick="rerollSingleMeal(${dayIndex}, '${type}', ${weekIndex})" title="Gericht neu würfeln" class="text-slate-300 hover:text-red-600 p-0.5 rounded transition cursor-pointer">
@@ -465,27 +480,36 @@ function renderCalendarMealCard(meal, dayIndex, type, titleLabel, weekIndex) {
           </div>
         </div>
 
-        <!-- Meal Title & Emoji -->
-        <div class="flex items-start gap-1.5 cursor-pointer" onclick="openRecipeModal('${meal.id}')" title="Rezept ansehen">
-          <span class="text-base select-none shrink-0 leading-tight">${meal.emoji || '🍲'}</span>
-          <h4 class="font-bold text-slate-900 text-xs leading-snug line-clamp-2 hover:text-red-600 transition">${meal.name}</h4>
-        </div>
-
-        <!-- Allergens Chips (inline compact) -->
-        <div class="mt-1 flex flex-wrap gap-0.5">
-          ${allergenBadges.join('')}
+        <!-- Meal Title & Emoji (Click to open recipe) -->
+        <div class="flex items-start gap-1.5 cursor-pointer group-hover:text-red-600 transition" onclick="openRecipeModal('${meal.id}')" title="Rezept ansehen">
+          <span class="text-lg select-none shrink-0 leading-tight">${meal.emoji || '🍲'}</span>
+          <div class="min-w-0">
+            <h4 class="font-bold text-slate-900 text-xs leading-snug line-clamp-2">${meal.name}</h4>
+            <span class="text-[10px] text-slate-400 font-medium">⏱️ ${meal.prepTimeMinutes} Min.</span>
+          </div>
         </div>
       </div>
 
-      <!-- Compact Meta Bar: Time + Calories + Protein + Recipe link -->
-      <div class="mt-1.5 pt-1 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
-        <span class="font-bold text-slate-700">
-          ⏱️${meal.prepTimeMinutes}m • 🔥${n.calories}kcal • ${n.protein}g P
-        </span>
-        <button onclick="openRecipeModal('${meal.id}')" class="font-extrabold text-red-600 hover:text-red-800 hover:underline flex items-center gap-0.5 cursor-pointer shrink-0">
-          <span>Rezept</span>
-          <i data-lucide="chevron-right" class="w-2.5 h-2.5"></i>
-        </button>
+      <!-- Macro Nutrients Grid (Kcal, Protein, Carbs, Fett) -->
+      <div class="mt-2 pt-1.5 border-t border-slate-200/60">
+        <div class="grid grid-cols-4 gap-1 py-1 px-1 bg-white rounded-lg text-center border border-slate-200/70 shadow-2xs">
+          <div>
+            <span class="block text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Kcal</span>
+            <span class="font-black text-[11px] text-slate-800 leading-none">${n.calories}</span>
+          </div>
+          <div class="border-l border-slate-100">
+            <span class="block text-[8px] font-bold text-blue-500 uppercase tracking-tighter">Protein</span>
+            <span class="font-black text-[11px] text-blue-700 leading-none">${n.protein}g</span>
+          </div>
+          <div class="border-l border-slate-100">
+            <span class="block text-[8px] font-bold text-emerald-500 uppercase tracking-tighter">Carbs</span>
+            <span class="font-black text-[11px] text-emerald-700 leading-none">${n.carbs}g</span>
+          </div>
+          <div class="border-l border-slate-100">
+            <span class="block text-[8px] font-bold text-amber-500 uppercase tracking-tighter">Fett</span>
+            <span class="font-black text-[11px] text-amber-700 leading-none">${n.fat}g</span>
+          </div>
+        </div>
       </div>
     </div>
   `;
@@ -532,7 +556,7 @@ function renderMultiWeekOverview() {
                     <span class="text-sm leading-none">${mainMeal.emoji || '🍲'}</span>
                     <div class="min-w-0">
                       <p class="font-bold text-[11px] text-slate-900 leading-tight truncate" title="${mainMeal.name}">${mainMeal.name}</p>
-                      <span class="text-[10px] text-slate-500">${mainMeal.nutrition?.calories || 550} kcal</span>
+                      <span class="text-[10px] text-slate-500">${mainMeal.nutrition?.calories || 550} kcal • ${mainMeal.nutrition?.protein || 25}g P</span>
                     </div>
                   </div>
                 ` : '<span class="text-slate-400 text-[10px]">Keine Mahlzeit</span>'}

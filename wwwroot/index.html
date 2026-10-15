@@ -33,36 +33,31 @@
 </head>
 <body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 antialiased">
 
-  <!-- Header (Full horizontal width) -->
+  <!-- Header (Clean & Compact, Full Width) -->
   <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs no-print">
     <div class="w-full px-3 sm:px-5 lg:px-6">
-      <div class="flex items-center justify-between h-13">
+      <div class="flex items-center justify-between h-12">
         <!-- Logo & Title -->
-        <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-red-600 via-white to-red-600 flex items-center justify-center shadow-xs border border-red-200 shrink-0">
-            <span class="text-base">🇦🇹</span>
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-red-600 via-white to-red-600 flex items-center justify-center shadow-xs border border-red-200 shrink-0">
+            <span class="text-sm">🇦🇹</span>
           </div>
-          <div class="flex items-center gap-2">
-            <span class="font-black text-base sm:text-lg tracking-tight text-slate-900">Mahlzeit Österreich</span>
-            <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span>
-              Live-Preise
-            </span>
-          </div>
+          <span class="font-black text-base tracking-tight text-slate-900">Mahlzeit Österreich</span>
+          <span class="text-xs text-slate-400 font-medium hidden md:inline">• Menüplaner & Supermarkt-Scout</span>
         </div>
 
         <!-- Navigation Tabs -->
         <nav class="flex items-center gap-1">
-          <button id="nav-tab-plan" onclick="switchTab('plan')" class="nav-tab active px-3 py-1.5 text-xs font-bold rounded-lg flex items-center gap-1.5 bg-red-50 text-red-700 transition cursor-pointer">
+          <button id="nav-tab-plan" onclick="switchTab('plan')" class="nav-tab active px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 bg-red-50 text-red-700 transition cursor-pointer">
             <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
-            <span>1. Kalender-Menü</span>
+            <span>1. Kalender</span>
           </button>
-          <button id="nav-tab-ingredients" onclick="switchTab('ingredients')" class="nav-tab px-3 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+          <button id="nav-tab-ingredients" onclick="switchTab('ingredients')" class="nav-tab px-3 py-1 text-xs font-semibold rounded-lg flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
             <i data-lucide="shopping-basket" class="w-3.5 h-3.5"></i>
             <span>2. Zutaten</span>
             <span id="badge-ingredients-count" class="ml-0.5 px-1.5 py-0.2 text-[10px] rounded-full bg-slate-200 text-slate-700 font-bold">0</span>
           </button>
-          <button id="nav-tab-scout" onclick="switchTab('scout')" class="nav-tab px-3 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+          <button id="nav-tab-scout" onclick="switchTab('scout')" class="nav-tab px-3 py-1 text-xs font-semibold rounded-lg flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
             <i data-lucide="scan-search" class="w-3.5 h-3.5"></i>
             <span>3. Supermarkt-Scout</span>
             <span id="badge-scout-status" class="hidden ml-0.5 px-1.5 py-0.2 text-[10px] rounded-full bg-emerald-100 text-emerald-700 font-bold">Scouted</span>
@@ -73,65 +68,71 @@
   </header>
 
   <!-- Main Container (Full horizontal width) -->
-  <main class="flex-grow w-full px-3 sm:px-5 lg:px-6 py-3 no-print">
+  <main class="flex-grow w-full px-3 sm:px-5 lg:px-6 py-2.5 no-print">
 
     <!-- TAB 1: KALENDER-MENÜPLAN -->
     <section id="tab-plan" class="tab-content block">
       
-      <!-- Compact Command Dashboard Bar 1: Navigation & Horizon Controls -->
-      <div class="bg-white rounded-xl p-2.5 sm:p-3 border border-slate-200 shadow-2xs mb-2.5 flex flex-wrap items-center justify-between gap-2.5">
+      <!-- Unified Clean Calendar Toolbar -->
+      <div class="bg-white rounded-xl p-2.5 border border-slate-200 shadow-2xs mb-2 flex flex-wrap items-center justify-between gap-2.5 text-xs">
         
-        <!-- Left: Planning Horizon & Title -->
+        <!-- Left: Horizon & Calendar Week Navigator -->
         <div class="flex items-center gap-2 flex-wrap">
-          <div class="flex items-center gap-1.5 mr-1">
-            <span class="text-sm font-black text-slate-900 tracking-tight flex items-center gap-1">
-              <span>Speiseplan</span>
-              <span class="text-xs">📅</span>
-            </span>
+          <!-- Horizon Segments -->
+          <div class="inline-flex bg-slate-100 p-0.5 rounded-lg border border-slate-200 font-bold text-slate-600">
+            <button onclick="setWeeksCount(1)" id="horizon-btn-1" class="horizon-pill active px-2.5 py-1 rounded-md bg-white shadow-2xs text-red-700 transition cursor-pointer">1 Wo</button>
+            <button onclick="setWeeksCount(2)" id="horizon-btn-2" class="horizon-pill px-2.5 py-1 rounded-md hover:text-slate-900 transition cursor-pointer">2 Wo</button>
+            <button onclick="setWeeksCount(3)" id="horizon-btn-3" class="horizon-pill px-2.5 py-1 rounded-md hover:text-slate-900 transition cursor-pointer">3 Wo</button>
+            <button onclick="setWeeksCount(4)" id="horizon-btn-4" class="horizon-pill px-2.5 py-1 rounded-md hover:text-slate-900 transition cursor-pointer">4 Wo</button>
           </div>
 
-          <!-- Horizon Selector -->
-          <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700">
-            <button onclick="setWeeksCount(1)" id="horizon-btn-1" class="horizon-pill active px-2 py-0.5 rounded-md bg-white shadow-2xs text-red-700 transition cursor-pointer">1 Woche</button>
-            <button onclick="setWeeksCount(2)" id="horizon-btn-2" class="horizon-pill px-2 py-0.5 rounded-md text-slate-600 hover:text-slate-900 transition cursor-pointer">2 Wochen</button>
-            <button onclick="setWeeksCount(3)" id="horizon-btn-3" class="horizon-pill px-2 py-0.5 rounded-md text-slate-600 hover:text-slate-900 transition cursor-pointer">3 Wochen</button>
-            <button onclick="setWeeksCount(4)" id="horizon-btn-4" class="horizon-pill px-2 py-0.5 rounded-md text-slate-600 hover:text-slate-900 transition cursor-pointer">4 Wochen</button>
-          </div>
-        </div>
-
-        <!-- Center: Week Navigator & View Modes -->
-        <div class="flex items-center gap-2 flex-wrap">
-          <div class="flex items-center gap-1 bg-slate-50 border border-slate-200/90 rounded-lg p-0.5">
-            <button onclick="changeActiveWeek(-1)" id="btn-prev-week" class="p-1.5 rounded-md hover:bg-white text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer" title="Vorherige Kalenderwoche">
+          <!-- Week Navigator -->
+          <div class="inline-flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg p-0.5 font-bold">
+            <button onclick="changeActiveWeek(-1)" id="btn-prev-week" class="p-1 rounded-md hover:bg-white text-slate-500 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer" title="Vorherige Woche">
               <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
             </button>
-            <span id="calendar-week-label" class="font-extrabold text-xs text-slate-900 px-2 py-0.5 select-none">
-              KW 42 • 19. Okt – 25. Okt
-            </span>
-            <span id="calendar-week-index-badge" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-800">
-              1 / 1
-            </span>
-            <button onclick="changeActiveWeek(1)" id="btn-next-week" class="p-1.5 rounded-md hover:bg-white text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer" title="Nächste Kalenderwoche">
+            <span id="calendar-week-label" class="text-slate-900 px-2 select-none">KW 42 • 19.–25. Okt</span>
+            <button onclick="changeActiveWeek(1)" id="btn-next-week" class="p-1 rounded-md hover:bg-white text-slate-500 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer" title="Nächste Woche">
               <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
             </button>
           </div>
 
-          <!-- View Mode Toggle -->
-          <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs">
-            <button onclick="setCalendarViewMode('week')" id="view-mode-week" class="px-2.5 py-0.5 rounded-md font-bold bg-slate-900 text-white shadow-2xs transition flex items-center gap-1 cursor-pointer">
-              <i data-lucide="columns-3" class="w-3 h-3"></i>
+          <!-- View Mode Switch -->
+          <div class="inline-flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+            <button onclick="setCalendarViewMode('week')" id="view-mode-week" class="px-2.5 py-1 rounded-md font-bold bg-white text-slate-900 shadow-2xs transition flex items-center gap-1 cursor-pointer">
+              <i data-lucide="columns-3" class="w-3 h-3 text-slate-500"></i>
               <span>7 Tage</span>
             </button>
-            <button onclick="setCalendarViewMode('multi')" id="view-mode-multi" class="px-2.5 py-0.5 rounded-md font-semibold text-slate-600 hover:text-slate-900 transition flex items-center gap-1 cursor-pointer">
-              <i data-lucide="layout-grid" class="w-3 h-3"></i>
-              <span>Monatsübersicht</span>
+            <button onclick="setCalendarViewMode('multi')" id="view-mode-multi" class="px-2.5 py-1 rounded-md font-medium text-slate-600 hover:text-slate-900 transition flex items-center gap-1 cursor-pointer">
+              <i data-lucide="layout-grid" class="w-3 h-3 text-slate-500"></i>
+              <span>Monat</span>
             </button>
           </div>
         </div>
 
-        <!-- Right: Servings, Lunch Toggle & Action Buttons -->
+        <!-- Center: Clean Diet Filter Pills & Allergen Dropdown Toggle -->
+        <div class="flex items-center gap-1 flex-wrap">
+          <button onclick="setDietFilter('all')" class="diet-filter-pill active px-2.5 py-1 rounded-lg font-semibold bg-red-100 text-red-800 border border-red-200 transition cursor-pointer" data-filter="all">Alle</button>
+          <button onclick="setDietFilter('austrian')" class="diet-filter-pill px-2.5 py-1 rounded-lg font-medium text-slate-600 hover:bg-slate-100 transition cursor-pointer" data-filter="austrian">🇦🇹 Österr.</button>
+          <button onclick="setDietFilter('vegetarian')" class="diet-filter-pill px-2.5 py-1 rounded-lg font-medium text-slate-600 hover:bg-slate-100 transition cursor-pointer" data-filter="vegetarian">🌱 Veggie</button>
+          <button onclick="setDietFilter('vegan')" class="diet-filter-pill px-2.5 py-1 rounded-lg font-medium text-slate-600 hover:bg-slate-100 transition cursor-pointer" data-filter="vegan">🌿 Vegan</button>
+          <button onclick="setDietFilter('favorites')" class="diet-filter-pill px-2.5 py-1 rounded-lg font-medium text-slate-600 hover:bg-slate-100 transition flex items-center gap-1 cursor-pointer" data-filter="favorites">
+            <span class="text-red-500">❤️</span>
+            <span>Favoriten</span>
+            <span id="badge-favorites-count" class="px-1 py-0.2 text-[9px] rounded-full bg-red-100 text-red-800 font-bold">0</span>
+          </button>
+
+          <!-- Subtle Allergies Button that toggles a neat drawer -->
+          <button onclick="toggleAllergenDrawer()" id="btn-toggle-allergens" class="px-2.5 py-1 rounded-lg font-medium bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 transition flex items-center gap-1 cursor-pointer">
+            <i data-lucide="shield-alert" class="w-3 h-3 text-amber-500"></i>
+            <span>Allergien</span>
+            <span id="allergen-count-badge" class="hidden px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 text-[9px] font-bold">0</span>
+          </button>
+        </div>
+
+        <!-- Right: Servings, Lunch Checkbox & Primary Actions -->
         <div class="flex items-center gap-2 flex-wrap">
-          <!-- Servings -->
+          <!-- Servings Select -->
           <div class="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg border border-slate-200 text-xs">
             <i data-lucide="users" class="w-3 h-3 text-slate-400"></i>
             <select id="servings-select" onchange="onServingsChange(this.value)" class="bg-transparent font-bold text-slate-800 outline-none cursor-pointer">
@@ -143,93 +144,56 @@
             </select>
           </div>
 
-          <!-- Lunch toggle -->
+          <!-- Lunch Toggle -->
           <label class="flex items-center gap-1.5 cursor-pointer bg-slate-50 px-2 py-1 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 select-none hover:bg-slate-100 transition">
             <input type="checkbox" id="toggle-lunch" onchange="onToggleLunch(this.checked)" class="w-3.5 h-3.5 rounded text-red-600 focus:ring-red-500">
-            <span>Mittag & Abend</span>
+            <span>+ Mittag</span>
           </label>
 
           <!-- A4 Print Button -->
-          <button onclick="printA4WeekPlan()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 shadow-2xs flex items-center gap-1.5 transition active:scale-95 cursor-pointer" title="Druckt den Plan auf eine einzelne A4-Seite">
-            <i data-lucide="printer" class="w-3.5 h-3.5 text-slate-600"></i>
-            <span>A4 Druck</span>
+          <button onclick="printA4WeekPlan()" class="bg-white hover:bg-slate-50 text-slate-700 font-bold px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs flex items-center gap-1 transition cursor-pointer" title="Druckt den Plan auf eine einzelne A4-Seite">
+            <i data-lucide="printer" class="w-3 h-3 text-slate-500"></i>
+            <span>Drucken</span>
           </button>
 
-          <!-- Roll Button -->
-          <button onclick="rollEntirePlan()" class="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow-2xs flex items-center gap-1.5 transition active:scale-95 cursor-pointer">
+          <!-- Reroll Plan Button -->
+          <button onclick="rollEntirePlan()" class="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold px-3.5 py-1 rounded-lg shadow-xs flex items-center gap-1.5 transition active:scale-95 cursor-pointer">
             <i data-lucide="dice-5" class="w-3.5 h-3.5"></i>
             <span>Neu planen</span>
           </button>
         </div>
       </div>
 
-      <!-- Compact Command Dashboard Bar 2: Diets, Allergens & Live Nutrition Metrics -->
-      <div class="bg-white rounded-xl px-3 py-2 border border-slate-200 shadow-2xs mb-2.5 flex flex-wrap items-center justify-between gap-2.5 text-xs">
-        
-        <!-- Diets & Allergens Filters -->
+      <!-- Collapsible Allergen Filter Drawer (Hidden by default, uncluttered!) -->
+      <div id="allergen-drawer" class="hidden flex flex-wrap items-center justify-between gap-2 bg-white rounded-xl px-3 py-2 border border-amber-200 shadow-2xs mb-2 text-xs">
         <div class="flex items-center gap-1.5 flex-wrap">
-          <span class="text-slate-400 font-bold mr-0.5">Filter:</span>
-          <!-- Diets -->
-          <button onclick="setDietFilter('all')" class="diet-filter-pill active px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 border border-red-200 transition cursor-pointer" data-filter="all">Alle</button>
-          <button onclick="setDietFilter('austrian')" class="diet-filter-pill px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer" data-filter="austrian">🇦🇹 Österr.</button>
-          <button onclick="setDietFilter('vegetarian')" class="diet-filter-pill px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer" data-filter="vegetarian">🌱 Veggie</button>
-          <button onclick="setDietFilter('vegan')" class="diet-filter-pill px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer" data-filter="vegan">🌿 Vegan</button>
-          <button onclick="setDietFilter('quick')" class="diet-filter-pill px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer" data-filter="quick">⚡ Schnell</button>
-          <button onclick="setDietFilter('budget')" class="diet-filter-pill px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer" data-filter="budget">💰 Budget</button>
-          <button onclick="setDietFilter('favorites')" class="diet-filter-pill px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center gap-1 cursor-pointer" data-filter="favorites">
-            <span class="text-red-500 font-bold">❤️</span>
-            <span>Favoriten</span>
-            <span id="badge-favorites-count" class="px-1 py-0.2 text-[9px] rounded-full bg-red-100 text-red-800 font-bold">0</span>
-          </button>
-
-          <span class="text-slate-300 mx-0.5">•</span>
-
-          <!-- Allergens -->
-          <button onclick="toggleAllergenFilter('gluten')" class="allergen-pill px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 border border-transparent transition cursor-pointer" data-allergen="gluten">
-            🌾 Glutenfrei
-          </button>
-          <button onclick="toggleAllergenFilter('lactose')" class="allergen-pill px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 border border-transparent transition cursor-pointer" data-allergen="lactose">
-            🥛 Laktosefrei
-          </button>
-          <button onclick="toggleAllergenFilter('egg')" class="allergen-pill px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 border border-transparent transition cursor-pointer" data-allergen="egg">
-            🥚 Ohne Ei
-          </button>
-          <button onclick="toggleAllergenFilter('fish')" class="allergen-pill px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 border border-transparent transition cursor-pointer" data-allergen="fish">
-            🐟 Ohne Fisch
-          </button>
-          <button onclick="toggleAllergenFilter('nuts')" class="allergen-pill px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 border border-transparent transition cursor-pointer" data-allergen="nuts">
-            🥜 Ohne Nüsse
-          </button>
-          <button id="btn-reset-allergens" onclick="resetAllergenFilters()" class="hidden text-[11px] text-red-600 hover:text-red-800 font-bold px-1.5 py-0.5 transition cursor-pointer">
-            ✕ Reset
-          </button>
+          <span class="text-amber-800 font-bold mr-1">Allergene ausschließen:</span>
+          <button onclick="toggleAllergenFilter('gluten')" class="allergen-pill px-2.5 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer" data-allergen="gluten">🌾 Glutenfrei</button>
+          <button onclick="toggleAllergenFilter('lactose')" class="allergen-pill px-2.5 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer" data-allergen="lactose">🥛 Laktosefrei</button>
+          <button onclick="toggleAllergenFilter('egg')" class="allergen-pill px-2.5 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer" data-allergen="egg">🥚 Ohne Ei</button>
+          <button onclick="toggleAllergenFilter('fish')" class="allergen-pill px-2.5 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer" data-allergen="fish">🐟 Ohne Fisch</button>
+          <button onclick="toggleAllergenFilter('nuts')" class="allergen-pill px-2.5 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer" data-allergen="nuts">🥜 Ohne Nüsse</button>
         </div>
+        <button id="btn-reset-allergens" onclick="resetAllergenFilters()" class="text-xs text-red-600 hover:text-red-800 font-bold px-2 py-0.5 transition cursor-pointer">✕ Filter zurücksetzen</button>
+      </div>
 
-        <!-- Slim Nutrition Summary Metrics Strip -->
-        <div class="flex items-center gap-2 font-bold text-xs">
-          <span class="text-slate-400 font-normal">Ø pro Mahlzeit:</span>
-          <span class="bg-amber-50 text-amber-900 border border-amber-200/80 px-2 py-0.5 rounded-md flex items-center gap-1">
-            <span>🔥</span>
-            <span id="nutri-avg-calories">560 kcal</span>
-          </span>
-          <span class="bg-blue-50 text-blue-900 border border-blue-200/80 px-2 py-0.5 rounded-md flex items-center gap-1">
-            <span>💪</span>
-            <span id="nutri-avg-protein">32 g</span>
-          </span>
-          <span class="bg-emerald-50 text-emerald-900 border border-emerald-200/80 px-2 py-0.5 rounded-md flex items-center gap-1">
-            <span>🌾</span>
-            <span id="nutri-avg-carbs">54 g</span>
-          </span>
-          <span class="bg-purple-50 text-purple-900 border border-purple-200/80 px-2 py-0.5 rounded-md flex items-center gap-1">
-            <span>🥑</span>
-            <span id="nutri-avg-fat">21 g</span>
-          </span>
+      <!-- Slim Average Nutrition Strip (Clean & Informative) -->
+      <div class="bg-slate-100/90 rounded-lg px-3 py-1 mb-2.5 flex items-center justify-between text-xs text-slate-600 font-medium border border-slate-200/60">
+        <div class="flex items-center gap-1 text-[11px] text-slate-500">
+          <i data-lucide="activity" class="w-3 h-3 text-slate-400"></i>
+          <span>Wochen-Durchschnitt pro Mahlzeit:</span>
+        </div>
+        <div class="flex items-center gap-3 font-bold text-xs">
+          <span class="text-slate-900">🔥 <span id="nutri-avg-calories">560 kcal</span></span>
+          <span class="text-blue-700">💪 <span id="nutri-avg-protein">32 g</span> <span class="font-normal text-slate-500 text-[10px]">Protein</span></span>
+          <span class="text-emerald-700">🌾 <span id="nutri-avg-carbs">54 g</span> <span class="font-normal text-slate-500 text-[10px]">Carbs</span></span>
+          <span class="text-amber-700">🥑 <span id="nutri-avg-fat">21 g</span> <span class="font-normal text-slate-500 text-[10px]">Fett</span></span>
         </div>
       </div>
 
       <!-- Calendar 7-Day Full Horizontal Width Grid View -->
       <div id="calendar-week-view" class="block w-full">
-        <div id="weekly-plan-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2.5 w-full">
+        <div id="weekly-plan-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 w-full">
           <!-- Populated by JS for Montag bis Sonntag across full width -->
         </div>
       </div>
@@ -238,35 +202,16 @@
       <div id="calendar-multi-view" class="hidden space-y-4 w-full">
         <!-- Populated by JS -->
       </div>
-
-      <!-- Slim Floating Bottom Bar -->
-      <div class="mt-3 bg-white border border-slate-200 p-2.5 sm:p-3 rounded-xl shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div class="flex items-center gap-2 text-xs">
-          <span class="text-emerald-600 font-bold">✓ Wochenplan & Nährwerte bereit</span>
-          <span class="text-slate-300">•</span>
-          <span class="text-slate-500">Zutaten und Portionen wurden synchronisiert.</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <button onclick="printA4WeekPlan()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs px-3 py-1.5 rounded-lg border border-slate-300 transition flex items-center gap-1.5 cursor-pointer">
-            <i data-lucide="printer" class="w-3.5 h-3.5"></i>
-            <span>A4 Druck</span>
-          </button>
-          <button onclick="proceedToIngredients()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-4 py-1.5 rounded-lg flex items-center gap-1.5 shadow-2xs transition active:scale-95 cursor-pointer">
-            <span>Zur Einkaufsliste</span>
-            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-          </button>
-        </div>
-      </div>
     </section>
 
     <!-- TAB 2: ZUTATEN & VORRAT (Full Width) -->
     <section id="tab-ingredients" class="tab-content hidden w-full">
-      <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs mb-4">
+      <div class="bg-white rounded-xl p-3.5 border border-slate-200 shadow-2xs mb-3">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
-            <h2 class="text-lg font-black text-slate-900 flex items-center gap-2">
+            <h2 class="text-base font-black text-slate-900 flex items-center gap-2">
               <span>Zutaten & Vorratsliste</span>
-              <span class="text-base">🧺</span>
+              <span class="text-sm">🧺</span>
             </h2>
             <p class="text-xs text-slate-500">Hake ab, was du bereits zu Hause hast, um beim Einkauf zu sparen.</p>
           </div>
@@ -275,7 +220,7 @@
           <div class="flex flex-wrap items-center gap-2">
             <button onclick="toggleAllIngredients(true)" class="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg transition cursor-pointer">Alle wählen</button>
             <button onclick="toggleAllIngredients(false)" class="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg transition cursor-pointer">Alle abwählen</button>
-            <button onclick="scoutSupermarkets()" class="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-bold text-xs px-4 py-1.5 rounded-lg shadow-2xs flex items-center gap-1.5 transition active:scale-95 cursor-pointer">
+            <button onclick="scoutSupermarkets()" class="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg shadow-2xs flex items-center gap-1.5 transition active:scale-95 cursor-pointer">
               <i data-lucide="scan-search" class="w-3.5 h-3.5"></i>
               <span>Supermärkte scouten & Preise vergleichen</span>
             </button>
@@ -283,7 +228,7 @@
         </div>
 
         <!-- Scope Selector: Which week to shop for -->
-        <div class="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2">
+        <div class="mt-2.5 pt-2.5 border-t border-slate-100 flex flex-wrap items-center gap-2">
           <span class="text-xs font-bold text-slate-600 mr-1 flex items-center gap-1">
             <i data-lucide="calendar-range" class="w-3.5 h-3.5 text-slate-500"></i>
             <span>Umfang:</span>
@@ -294,7 +239,7 @@
         </div>
 
         <!-- Add Custom Item Input -->
-        <div class="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2">
+        <div class="mt-2.5 pt-2.5 border-t border-slate-100 flex items-center gap-2">
           <div class="relative flex-grow">
             <i data-lucide="plus" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
             <input type="text" id="custom-item-input" onkeydown="handleCustomItemKey(event)" placeholder="Zutat hinzufügen (z.B. Kaffee, Bier, Äpfel) und Enter drücken..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-1 focus:ring-red-500 outline-none transition">
@@ -306,7 +251,7 @@
         </div>
 
         <!-- Category Filters -->
-        <div class="mt-3 flex flex-wrap items-center gap-1.5" id="ingredient-category-filters">
+        <div class="mt-2.5 flex flex-wrap items-center gap-1.5" id="ingredient-category-filters">
           <!-- Filled by JS -->
         </div>
       </div>
@@ -333,10 +278,10 @@
       <!-- Scout Results Content -->
       <div id="scout-results" class="block w-full">
         <!-- Comparison Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-2.5 mb-3">
           <!-- SPAR Card -->
-          <div class="bg-white rounded-xl p-3.5 border border-emerald-200 shadow-2xs relative overflow-hidden">
-            <div class="flex items-center justify-between mb-1">
+          <div class="bg-white rounded-xl p-3 border border-emerald-200 shadow-2xs relative overflow-hidden">
+            <div class="flex items-center justify-between mb-0.5">
               <span class="font-black text-xs text-emerald-800 flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                 SPAR / Interspar
@@ -344,12 +289,12 @@
               <span class="text-[10px] bg-emerald-50 text-emerald-700 px-1.5 py-0.2 rounded font-bold border border-emerald-200">Live API</span>
             </div>
             <div class="text-xl font-black text-slate-900" id="stat-spar-total">0,00 €</div>
-            <p class="text-[11px] text-slate-500 mt-0.5">Alles bei SPAR</p>
+            <p class="text-[10px] text-slate-400 mt-0.5">Alles bei SPAR</p>
           </div>
 
           <!-- BILLA Card -->
-          <div class="bg-white rounded-xl p-3.5 border border-yellow-200 shadow-2xs relative overflow-hidden">
-            <div class="flex items-center justify-between mb-1">
+          <div class="bg-white rounded-xl p-3 border border-yellow-200 shadow-2xs relative overflow-hidden">
+            <div class="flex items-center justify-between mb-0.5">
               <span class="font-black text-xs text-yellow-800 flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
                 BILLA / Rewe
@@ -357,12 +302,12 @@
               <span class="text-[10px] bg-yellow-50 text-yellow-700 px-1.5 py-0.2 rounded font-bold border border-yellow-200">Live API</span>
             </div>
             <div class="text-xl font-black text-slate-900" id="stat-billa-total">0,00 €</div>
-            <p class="text-[11px] text-slate-500 mt-0.5">Alles bei BILLA</p>
+            <p class="text-[10px] text-slate-400 mt-0.5">Alles bei BILLA</p>
           </div>
 
           <!-- HOFER Card -->
-          <div class="bg-white rounded-xl p-3.5 border border-blue-200 shadow-2xs relative overflow-hidden">
-            <div class="flex items-center justify-between mb-1">
+          <div class="bg-white rounded-xl p-3 border border-blue-200 shadow-2xs relative overflow-hidden">
+            <div class="flex items-center justify-between mb-0.5">
               <span class="font-black text-xs text-blue-900 flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-blue-600"></span>
                 HOFER Discounter
@@ -370,12 +315,12 @@
               <span class="text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.2 rounded font-bold border border-blue-200">Index</span>
             </div>
             <div class="text-xl font-black text-slate-900" id="stat-hofer-total">0,00 €</div>
-            <p class="text-[11px] text-slate-500 mt-0.5">Benchmark</p>
+            <p class="text-[10px] text-slate-400 mt-0.5">Benchmark</p>
           </div>
 
           <!-- Der Spar-Fuchs (Optimized) -->
-          <div class="bg-gradient-to-br from-red-600 to-red-800 text-white rounded-xl p-3.5 shadow-2xs relative overflow-hidden">
-            <div class="flex items-center justify-between mb-1">
+          <div class="bg-gradient-to-br from-red-600 to-red-800 text-white rounded-xl p-3 shadow-2xs relative overflow-hidden">
+            <div class="flex items-center justify-between mb-0.5">
               <span class="font-black text-xs flex items-center gap-1.5">
                 <span>🦊</span>
                 Der Spar-Fuchs
@@ -391,30 +336,30 @@
         </div>
 
         <!-- Shopping View Switcher & Toolbar -->
-        <div class="bg-white rounded-xl p-3 border border-slate-200 shadow-2xs mb-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="bg-white rounded-xl p-2.5 border border-slate-200 shadow-2xs mb-3 flex flex-col sm:flex-row items-center justify-between gap-2.5">
           <!-- View Modes -->
-          <div class="flex items-center gap-1.5 bg-slate-100 p-0.5 rounded-lg w-full sm:w-auto">
+          <div class="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg w-full sm:w-auto">
             <button id="view-mode-split" onclick="setScoutViewMode('split')" class="view-mode-btn active flex-1 sm:flex-initial px-3 py-1 text-xs font-bold rounded-md bg-white shadow-2xs text-slate-900 transition flex items-center justify-center gap-1 cursor-pointer">
               <i data-lucide="store" class="w-3.5 h-3.5"></i>
               <span>Nach Supermarkt</span>
             </button>
             <button id="view-mode-comparison" onclick="setScoutViewMode('comparison')" class="view-mode-btn flex-1 sm:flex-initial px-3 py-1 text-xs font-semibold rounded-md text-slate-600 hover:text-slate-900 transition flex items-center justify-center gap-1 cursor-pointer">
               <i data-lucide="table" class="w-3.5 h-3.5"></i>
-              <span>Preisvergleichs-Tabelle</span>
+              <span>Vergleichstabelle</span>
             </button>
           </div>
 
           <!-- Utility buttons -->
-          <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-            <button onclick="copyShoppingListToClipboard()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer">
+          <div class="flex items-center gap-1.5 w-full sm:w-auto justify-end">
+            <button onclick="copyShoppingListToClipboard()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1 cursor-pointer">
               <i data-lucide="copy" class="w-3.5 h-3.5"></i>
               <span>Kopieren</span>
             </button>
-            <button onclick="window.print()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer">
+            <button onclick="window.print()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-lg transition flex items-center gap-1 cursor-pointer">
               <i data-lucide="printer" class="w-3.5 h-3.5"></i>
               <span>Drucken</span>
             </button>
-            <button onclick="scoutSupermarkets()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer">
+            <button onclick="scoutSupermarkets()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-1 rounded-lg transition flex items-center gap-1 cursor-pointer">
               <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
               <span>Aktualisieren</span>
             </button>
@@ -422,7 +367,7 @@
         </div>
 
         <!-- Container for View: Split Store Lists -->
-        <div id="scout-split-view" class="space-y-4 w-full">
+        <div id="scout-split-view" class="space-y-3 w-full">
           <!-- Generated via JS -->
         </div>
 
