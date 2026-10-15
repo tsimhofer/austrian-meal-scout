@@ -388,31 +388,30 @@ function renderWeeklyCalendarGrid() {
     const dayTotalProtein = dayMeals.reduce((acc, m) => acc + (m.nutrition?.protein || 25), 0);
 
     return `
-      <div class="calendar-day-col bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between overflow-hidden ${day.isToday ? 'ring-2 ring-red-500/80 shadow-md' : ''}">
+      <div class="calendar-day-col bg-white rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between overflow-hidden ${day.isToday ? 'ring-2 ring-red-500 shadow-xs' : ''}">
         <!-- Day Column Header -->
-        <div class="p-3.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-          <div>
-            <span class="font-extrabold text-sm text-slate-900 block leading-tight">${day.dayName}</span>
-            <span class="text-xs font-semibold text-slate-500">${day.formattedDate || `Tag ${idx + 1}`}</span>
+        <div class="px-2.5 py-1.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <span class="font-black text-xs text-slate-900 leading-none">${day.dayName.slice(0, 2)}</span>
+            <span class="text-[11px] font-semibold text-slate-500 leading-none">${day.formattedDate || `Tag ${idx + 1}`}</span>
           </div>
           ${day.isToday ? `
-            <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-red-600 text-white shadow-2xs">Heute</span>
+            <span class="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded bg-red-600 text-white shadow-2xs">Heute</span>
           ` : `
-            <span class="text-[10px] font-bold text-slate-400">#${idx + 1}</span>
+            <span class="text-[10px] font-bold text-slate-300">#${idx + 1}</span>
           `}
         </div>
 
         <!-- Meals in Day -->
-        <div class="p-2.5 space-y-2.5 flex-grow">
-          ${day.lunch ? renderCalendarMealCard(day.lunch, idx, 'lunch', 'Mittagessen', state.activeWeekIndex) : ''}
-          ${day.dinner ? renderCalendarMealCard(day.dinner, idx, 'dinner', state.includeLunches ? 'Abendessen' : 'Hauptgericht', state.activeWeekIndex) : ''}
+        <div class="p-1.5 space-y-1.5 flex-grow">
+          ${day.lunch ? renderCalendarMealCard(day.lunch, idx, 'lunch', 'Mittag', state.activeWeekIndex) : ''}
+          ${day.dinner ? renderCalendarMealCard(day.dinner, idx, 'dinner', state.includeLunches ? 'Abend' : 'Hauptgericht', state.activeWeekIndex) : ''}
         </div>
 
         <!-- Day Footer Summary -->
-        <div class="p-2.5 bg-slate-50/80 border-t border-slate-100 text-center text-[11px] text-slate-500 font-semibold flex items-center justify-around">
-          <span>🔥 ${dayTotalCalories} kcal</span>
-          <span class="text-slate-300">•</span>
-          <span>💪 ${dayTotalProtein}g Protein</span>
+        <div class="px-2 py-1 bg-slate-50 border-t border-slate-100 text-[10px] text-slate-500 font-bold flex items-center justify-between">
+          <span title="Tageskalorien">🔥 ${dayTotalCalories} kcal</span>
+          <span title="Tagesprotein">💪 ${dayTotalProtein}g P</span>
         </div>
       </div>
     `;
@@ -428,66 +427,62 @@ function renderCalendarMealCard(meal, dayIndex, type, titleLabel, weekIndex) {
   // Allergens chips
   const allergenBadges = [];
   if (meal.allergens && meal.allergens.length > 0) {
-    if (meal.allergens.includes('gluten')) allergenBadges.push('<span class="text-[9px] px-1.5 py-0.2 rounded bg-amber-50 text-amber-800 border border-amber-200">🌾 Gluten</span>');
-    if (meal.allergens.includes('lactose')) allergenBadges.push('<span class="text-[9px] px-1.5 py-0.2 rounded bg-blue-50 text-blue-800 border border-blue-200">🥛 Laktose</span>');
-    if (meal.allergens.includes('egg')) allergenBadges.push('<span class="text-[9px] px-1.5 py-0.2 rounded bg-yellow-50 text-yellow-800 border border-yellow-200">🥚 Ei</span>');
-    if (meal.allergens.includes('fish')) allergenBadges.push('<span class="text-[9px] px-1.5 py-0.2 rounded bg-cyan-50 text-cyan-800 border border-cyan-200">🐟 Fisch</span>');
-    if (meal.allergens.includes('nuts')) allergenBadges.push('<span class="text-[9px] px-1.5 py-0.2 rounded bg-orange-50 text-orange-800 border border-orange-200">🥜 Nüsse</span>');
+    if (meal.allergens.includes('gluten')) allergenBadges.push('<span class="text-[8px] px-1 py-0.2 rounded bg-amber-50 text-amber-800 border border-amber-200">🌾 Gluten</span>');
+    if (meal.allergens.includes('lactose')) allergenBadges.push('<span class="text-[8px] px-1 py-0.2 rounded bg-blue-50 text-blue-800 border border-blue-200">🥛 Laktose</span>');
+    if (meal.allergens.includes('egg')) allergenBadges.push('<span class="text-[8px] px-1 py-0.2 rounded bg-yellow-50 text-yellow-800 border border-yellow-200">🥚 Ei</span>');
+    if (meal.allergens.includes('fish')) allergenBadges.push('<span class="text-[8px] px-1 py-0.2 rounded bg-cyan-50 text-cyan-800 border border-cyan-200">🐟 Fisch</span>');
+    if (meal.allergens.includes('nuts')) allergenBadges.push('<span class="text-[8px] px-1 py-0.2 rounded bg-orange-50 text-orange-800 border border-orange-200">🥜 Nüsse</span>');
   } else {
-    allergenBadges.push('<span class="text-[9px] px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">✅ Frei</span>');
+    allergenBadges.push('<span class="text-[8px] px-1 py-0.2 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">✅ Frei</span>');
   }
 
   // Diet chip
   let dietBadge = '';
   if (meal.tags.includes('vegan')) {
-    dietBadge = '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800">🌿 Vegan</span>';
+    dietBadge = '<span class="text-[8px] font-bold px-1 py-0.2 rounded bg-emerald-100 text-emerald-800">🌿 Vegan</span>';
   } else if (meal.tags.includes('vegetarian')) {
-    dietBadge = '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-green-100 text-green-800">🌱 Veggie</span>';
+    dietBadge = '<span class="text-[8px] font-bold px-1 py-0.2 rounded bg-green-100 text-green-800">🌱 Veggie</span>';
   }
 
   return `
-    <div class="calendar-meal-card bg-slate-50/80 p-3 rounded-xl border border-slate-200/80 hover:border-slate-300 hover:shadow-xs transition relative group">
-      <!-- Slot Label & Action Icons -->
-      <div class="flex items-center justify-between gap-1 mb-1.5">
-        <div class="flex items-center gap-1 flex-wrap">
-          <span class="text-[10px] font-extrabold text-red-700 uppercase tracking-wider">${titleLabel}</span>
-          ${dietBadge}
+    <div class="calendar-meal-card bg-slate-50/70 hover:bg-white p-2 rounded-lg border border-slate-200/80 hover:border-slate-300 hover:shadow-2xs transition relative group flex flex-col justify-between">
+      <div>
+        <!-- Slot Label & Quick Actions -->
+        <div class="flex items-center justify-between gap-1 mb-1">
+          <div class="flex items-center gap-1">
+            <span class="text-[9px] font-extrabold text-red-700 uppercase tracking-wider">${titleLabel}</span>
+            ${dietBadge}
+          </div>
+          <div class="flex items-center">
+            <!-- Favorite toggle -->
+            <button onclick="toggleFavorite('${meal.id}', event)" title="Favorit umschalten" class="fav-btn-${meal.id} ${isFav ? 'text-red-500' : 'text-slate-300'} hover:text-red-500 p-0.5 rounded transition cursor-pointer">
+              <span class="fav-icon text-[11px] select-none leading-none">${isFav ? '❤️' : '🤍'}</span>
+            </button>
+            <!-- Reroll button -->
+            <button onclick="rerollSingleMeal(${dayIndex}, '${type}', ${weekIndex})" title="Gericht neu würfeln" class="text-slate-300 hover:text-red-600 p-0.5 rounded transition cursor-pointer">
+              <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+            </button>
+          </div>
         </div>
-        <div class="flex items-center gap-0.5">
-          <!-- Favorite toggle -->
-          <button onclick="toggleFavorite('${meal.id}', event)" title="Favorit umschalten" class="fav-btn-${meal.id} ${isFav ? 'text-red-500' : 'text-slate-400'} hover:text-red-500 p-1 rounded transition cursor-pointer">
-            <span class="fav-icon text-xs select-none">${isFav ? '❤️' : '🤍'}</span>
-          </button>
-          <!-- Reroll button -->
-          <button onclick="rerollSingleMeal(${dayIndex}, '${type}', ${weekIndex})" title="Gericht neu würfeln" class="text-slate-400 hover:text-red-600 p-1 rounded transition cursor-pointer">
-            <i data-lucide="refresh-cw" class="w-3 h-3"></i>
-          </button>
+
+        <!-- Meal Title & Emoji -->
+        <div class="flex items-start gap-1.5 cursor-pointer" onclick="openRecipeModal('${meal.id}')" title="Rezept ansehen">
+          <span class="text-base select-none shrink-0 leading-tight">${meal.emoji || '🍲'}</span>
+          <h4 class="font-bold text-slate-900 text-xs leading-snug line-clamp-2 hover:text-red-600 transition">${meal.name}</h4>
+        </div>
+
+        <!-- Allergens Chips (inline compact) -->
+        <div class="mt-1 flex flex-wrap gap-0.5">
+          ${allergenBadges.join('')}
         </div>
       </div>
 
-      <!-- Meal Title & Emoji -->
-      <div class="flex items-start gap-2">
-        <span class="text-xl select-none shrink-0">${meal.emoji || '🍲'}</span>
-        <div class="min-w-0 flex-grow">
-          <h4 class="font-bold text-slate-900 text-xs leading-snug line-clamp-2" title="${meal.name}">${meal.name}</h4>
-          <span class="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
-            <i data-lucide="clock" class="w-2.5 h-2.5 text-slate-400"></i>
-            <span>${meal.prepTimeMinutes} Min</span> • <span>${meal.category}</span>
-          </span>
-        </div>
-      </div>
-
-      <!-- Allergens Chips -->
-      <div class="mt-2 flex flex-wrap gap-1">
-        ${allergenBadges.join('')}
-      </div>
-
-      <!-- Nutrition & Recipe Link -->
-      <div class="mt-2 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
-        <span class="font-bold text-amber-900 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/80">
-          🔥 ${n.calories} kcal • ${n.protein}g P
+      <!-- Compact Meta Bar: Time + Calories + Protein + Recipe link -->
+      <div class="mt-1.5 pt-1 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
+        <span class="font-bold text-slate-700">
+          ⏱️${meal.prepTimeMinutes}m • 🔥${n.calories}kcal • ${n.protein}g P
         </span>
-        <button onclick="openRecipeModal('${meal.id}')" class="font-bold text-red-600 hover:text-red-800 flex items-center gap-0.5 cursor-pointer">
+        <button onclick="openRecipeModal('${meal.id}')" class="font-extrabold text-red-600 hover:text-red-800 hover:underline flex items-center gap-0.5 cursor-pointer shrink-0">
           <span>Rezept</span>
           <i data-lucide="chevron-right" class="w-2.5 h-2.5"></i>
         </button>
@@ -502,45 +497,45 @@ function renderMultiWeekOverview() {
 
   container.innerHTML = state.plan.weeks.map((week, wIdx) => {
     return `
-      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden w-full">
         <!-- Week Header -->
-        <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div class="flex items-center gap-3">
-            <span class="text-base font-black text-slate-900">${week.label}</span>
-            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-red-100 text-red-800">
+        <div class="px-3.5 py-2 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-black text-slate-900">${week.label}</span>
+            <span class="text-[10px] font-bold px-2 py-0.2 rounded-full bg-red-100 text-red-800">
               Woche ${wIdx + 1}
             </span>
           </div>
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2">
             <span class="text-xs text-slate-500 font-semibold">
               Ø ${week.nutritionSummary?.averageCalories || 550} kcal / Mahlzeit
             </span>
-            <button onclick="setActiveWeekDirectly(${wIdx})" class="text-xs font-bold text-red-700 bg-white hover:bg-red-50 border border-slate-200 px-3 py-1.5 rounded-xl shadow-2xs transition flex items-center gap-1 cursor-pointer">
-              <span>Woche im Kalender öffnen</span>
-              <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            <button onclick="setActiveWeekDirectly(${wIdx})" class="text-xs font-bold text-red-700 bg-white hover:bg-red-50 border border-slate-200 px-2.5 py-1 rounded-lg shadow-2xs transition flex items-center gap-1 cursor-pointer">
+              <span>Woche im 7-Tage-Kalender</span>
+              <i data-lucide="arrow-right" class="w-3 h-3"></i>
             </button>
           </div>
         </div>
 
         <!-- 7 Days in Week Row -->
-        <div class="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+        <div class="p-2.5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
           ${week.days.map((day, dIdx) => {
             const mainMeal = day.dinner || day.lunch;
             return `
-              <div class="p-3 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-white hover:shadow-xs transition">
-                <div class="flex items-center justify-between text-xs font-bold text-slate-700 mb-1.5">
+              <div class="p-2 rounded-lg border border-slate-100 bg-slate-50/70 hover:bg-white hover:shadow-2xs transition text-xs">
+                <div class="flex items-center justify-between font-bold text-slate-700 mb-1">
                   <span>${day.dayName.slice(0, 2)} ${day.formattedDate || ''}</span>
-                  ${day.isToday ? '<span class="text-[9px] bg-red-600 text-white px-1.5 py-0.2 rounded font-black">Heute</span>' : ''}
+                  ${day.isToday ? '<span class="text-[8px] bg-red-600 text-white px-1 py-0.2 rounded font-black">Heute</span>' : ''}
                 </div>
                 ${mainMeal ? `
-                  <div class="flex items-start gap-1.5">
-                    <span class="text-lg">${mainMeal.emoji || '🍲'}</span>
+                  <div class="flex items-start gap-1">
+                    <span class="text-sm leading-none">${mainMeal.emoji || '🍲'}</span>
                     <div class="min-w-0">
-                      <p class="font-bold text-xs text-slate-900 leading-snug truncate" title="${mainMeal.name}">${mainMeal.name}</p>
+                      <p class="font-bold text-[11px] text-slate-900 leading-tight truncate" title="${mainMeal.name}">${mainMeal.name}</p>
                       <span class="text-[10px] text-slate-500">${mainMeal.nutrition?.calories || 550} kcal</span>
                     </div>
                   </div>
-                ` : '<span class="text-xs text-slate-400">Keine Mahlzeit</span>'}
+                ` : '<span class="text-slate-400 text-[10px]">Keine Mahlzeit</span>'}
               </div>
             `;
           }).join('')}
