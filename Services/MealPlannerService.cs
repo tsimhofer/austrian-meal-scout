@@ -21,23 +21,39 @@ public class MealPlannerService
     public MultiWeekPlan GenerateMultiWeekPlan(
         string? tagFilter = "all",
         int servings = 2,
-        bool includeLunches = false,
+        bool includeBreakfast = false,
+        bool includeLunch = false,
+        bool includeDinner = true,
         int weeksCount = 1,
         string? startDateStr = null,
         List<string>? excludedAllergens = null,
-        List<string>? favoriteMealIds = null)
+        List<string>? favoriteMealIds = null,
+        List<LockedMealItem>? lockedMeals = null)
     {
         weeksCount = Math.Clamp(weeksCount, 1, 6);
 
-        var eligibleMeals = _mealDatabase.GetFilteredMeals(
+        // Separate pools for breakfast and main meals (lunch/dinner)
+        var breakfastMeals = _mealDatabase.GetFilteredMeals(
             diet: tagFilter,
             excludedAllergens: excludedAllergens,
-            favoriteIds: favoriteMealIds
+            favoriteIds: favoriteMealIds,
+            isBreakfast: true
         );
-
-        if (eligibleMeals.Count == 0)
+        if (breakfastMeals.Count == 0)
         {
-            eligibleMeals = _mealDatabase.GetAllMeals().ToList();
+            breakfastMeals = _mealDatabase.GetFilteredMeals(isBreakfast: true);
+            if (breakfastMeals.Count == 0) breakfastMeals = _mealDatabase.GetAllMeals().ToList();
+        }
+
+        var mainMeals = _mealDatabase.GetFilteredMeals(
+            diet: tagFilter,
+            excludedAllergens: excludedAllergens,
+            favoriteIds: favoriteMealIds,
+            isBreakfast: false
+        );
+        if (mainMeals.Count == 0)
+        {
+            mainMeals = _mealDatabase.GetAllMeals().ToList();
         }
 
         // Determine starting Monday
@@ -60,8 +76,10 @@ public class MealPlannerService
         };
 
         var allPlannedMeals = new List<Meal>();
-        var pool = eligibleMeals.OrderBy(_ => _random.Next()).ToList();
-        int poolIdx = 0;
+        var breakfastPool = breakfastMeals.OrderBy(_ => _random.Next()).ToList();
+        var mainPool = mainMeals.OrderBy(_ => _random.Next()).ToList();
+        int bIdx = 0;
+        int mIdx = 0;
 
         for (int w = 0; w < weeksCount; w++)
         {
@@ -94,26 +112,82 @@ public class MealPlannerService
                     WeekIndex = w
                 };
 
-                if (includeLunches)
+                // Check for locked meals for this day
+                var lockedBreakfast = lockedMeals?.FirstOrDefault(l => l.WeekIndex == w && l.DayIndex == d && l.MealType == "breakfast");
+                var lockedLunch = lockedMeals?.FirstOrDefault(l => l.WeekIndex == w && l.DayIndex == d && l.MealType == "lunch");
+                var lockedDinner = lockedMeals?.FirstOrDefault(l => l.WeekIndex == w && l.DayIndex == d && l.MealType == "dinner");
+
+                // 1. Breakfast Slot
+                if (includeBreakfast)
                 {
-                    if (poolIdx >= pool.Count)
+                    if (lockedBreakfast != null && !string.IsNullOrEmpty(lockedBreakfast.MealId))
                     {
-                        pool = eligibleMeals.OrderBy(_ => _random.Next()).ToList();
-                        poolIdx = 0;
+                        planDay.Breakfast = _mealDatabase.GetMealById(lockedBreakfast.MealId) ?? breakfastMeals.FirstOrDefault();
                     }
-                    planDay.Lunch = pool[poolIdx++];
-                    weekMeals.Add(planDay.Lunch);
-                    allPlannedMeals.Add(planDay.Lunch);
+                    else
+                    {
+                        if (bIdx >= breakfastPool.Count)
+                        {
+                            breakfastPool = breakfastMeals.OrderBy(_ => _random.Next()).ToList();
+                            bIdx = 0;
+                        }
+                        planDay.Breakfast = breakfastPool[bIdx++];
+                    }
+
+                    if (planDay.Breakfast != null)
+                    {
+                        weekMeals.Add(planDay.Breakfast);
+                        allPlannedMeals.Add(planDay.Breakfast);
+                    }
                 }
 
-                if (poolIdx >= pool.Count)
+                // 2. Lunch Slot
+                if (includeLunch)
                 {
-                    pool = eligibleMeals.OrderBy(_ => _random.Next()).ToList();
-                    poolIdx = 0;
+                    if (lockedLunch != null && !string.IsNullOrEmpty(lockedLunch.MealId))
+                    {
+                        planDay.Lunch = _mealDatabase.GetMealById(lockedLunch.MealId) ?? mainMeals.FirstOrDefault();
+                    }
+                    else
+                    {
+                        if (mIdx >= mainPool.Count)
+                        {
+                            mainPool = mainMeals.OrderBy(_ => _random.Next()).ToList();
+                            mIdx = 0;
+                        }
+                        planDay.Lunch = mainPool[mIdx++];
+                    }
+
+                    if (planDay.Lunch != null)
+                    {
+                        weekMeals.Add(planDay.Lunch);
+                        allPlannedMeals.Add(planDay.Lunch);
+                    }
                 }
-                planDay.Dinner = pool[poolIdx++];
-                weekMeals.Add(planDay.Dinner);
-                allPlannedMeals.Add(planDay.Dinner);
+
+                // 3. Dinner Slot
+                if (includeDinner)
+                {
+                    if (lockedDinner != null && !string.IsNullOrEmpty(lockedDinner.MealId))
+                    {
+                        planDay.Dinner = _mealDatabase.GetMealById(lockedDinner.MealId) ?? mainMeals.FirstOrDefault();
+                    }
+                    else
+                    {
+                        if (mIdx >= mainPool.Count)
+                        {
+                            mainPool = mainMeals.OrderBy(_ => _random.Next()).ToList();
+                            mIdx = 0;
+                        }
+                        planDay.Dinner = mainPool[mIdx++];
+                    }
+
+                    if (planDay.Dinner != null)
+                    {
+                        weekMeals.Add(planDay.Dinner);
+                        allPlannedMeals.Add(planDay.Dinner);
+                    }
+                }
 
                 plannedWeek.Days.Add(planDay);
             }
@@ -145,17 +219,20 @@ public class MealPlannerService
         string? tagFilter,
         List<string> currentMealIds,
         List<string>? excludedAllergens = null,
-        List<string>? favoriteMealIds = null)
+        List<string>? favoriteMealIds = null,
+        bool isBreakfast = false)
     {
         var eligibleMeals = _mealDatabase.GetFilteredMeals(
             diet: tagFilter,
             excludedAllergens: excludedAllergens,
-            favoriteIds: favoriteMealIds
+            favoriteIds: favoriteMealIds,
+            isBreakfast: isBreakfast
         );
 
         if (eligibleMeals.Count == 0)
         {
-            eligibleMeals = _mealDatabase.GetAllMeals().ToList();
+            eligibleMeals = _mealDatabase.GetFilteredMeals(isBreakfast: isBreakfast);
+            if (eligibleMeals.Count == 0) eligibleMeals = _mealDatabase.GetAllMeals().ToList();
         }
 
         var pool = eligibleMeals.Where(m => !currentMealIds.Contains(m.Id)).ToList();
@@ -232,6 +309,7 @@ public class MealPlannerService
             var targetWeek = plan.Weeks[weekIndex.Value];
             foreach (var day in targetWeek.Days)
             {
+                if (day.Breakfast != null) meals.Add(day.Breakfast);
                 if (day.Lunch != null) meals.Add(day.Lunch);
                 if (day.Dinner != null) meals.Add(day.Dinner);
             }
@@ -242,6 +320,7 @@ public class MealPlannerService
             {
                 foreach (var day in week.Days)
                 {
+                    if (day.Breakfast != null) meals.Add(day.Breakfast);
                     if (day.Lunch != null) meals.Add(day.Lunch);
                     if (day.Dinner != null) meals.Add(day.Dinner);
                 }

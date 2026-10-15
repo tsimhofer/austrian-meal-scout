@@ -29,6 +29,8 @@
   </script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 antialiased">
@@ -36,33 +38,66 @@
   <!-- Header (Clean & Compact, Full Width) -->
   <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs no-print">
     <div class="w-full px-3 sm:px-5 lg:px-6">
-      <div class="flex items-center justify-between h-12">
+      <div class="flex items-center justify-between h-12 gap-2">
         <!-- Logo & Title -->
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 shrink-0">
           <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-red-600 via-white to-red-600 flex items-center justify-center shadow-xs border border-red-200 shrink-0">
             <span class="text-sm">🇦🇹</span>
           </div>
           <span class="font-black text-base tracking-tight text-slate-900">Mahlzeit Österreich</span>
-          <span class="text-xs text-slate-400 font-medium hidden md:inline">• Menüplaner & Supermarkt-Scout</span>
+          <span class="text-xs text-slate-400 font-medium hidden lg:inline">• Menüplaner & Supermarkt-Scout</span>
         </div>
 
-        <!-- Navigation Tabs -->
-        <nav class="flex items-center gap-1">
-          <button id="nav-tab-plan" onclick="switchTab('plan')" class="nav-tab active px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 bg-red-50 text-red-700 transition cursor-pointer">
-            <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
-            <span>1. Kalender</span>
-          </button>
-          <button id="nav-tab-ingredients" onclick="switchTab('ingredients')" class="nav-tab px-3 py-1 text-xs font-semibold rounded-lg flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
-            <i data-lucide="shopping-basket" class="w-3.5 h-3.5"></i>
-            <span>2. Zutaten</span>
-            <span id="badge-ingredients-count" class="ml-0.5 px-1.5 py-0.2 text-[10px] rounded-full bg-slate-200 text-slate-700 font-bold">0</span>
-          </button>
-          <button id="nav-tab-scout" onclick="switchTab('scout')" class="nav-tab px-3 py-1 text-xs font-semibold rounded-lg flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
-            <i data-lucide="scan-search" class="w-3.5 h-3.5"></i>
-            <span>3. Supermarkt-Scout</span>
-            <span id="badge-scout-status" class="hidden ml-0.5 px-1.5 py-0.2 text-[10px] rounded-full bg-emerald-100 text-emerald-700 font-bold">Scouted</span>
-          </button>
-        </nav>
+        <!-- Right Side: Navigation Tabs & Auth Profile -->
+        <div class="flex items-center gap-2">
+          <!-- Navigation Tabs -->
+          <nav class="flex items-center gap-1">
+            <button id="nav-tab-plan" onclick="switchTab('plan')" class="nav-tab active px-2.5 sm:px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 bg-red-50 text-red-700 transition cursor-pointer">
+              <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+              <span class="hidden sm:inline">1. Kalender</span>
+              <span class="sm:hidden">1. Plan</span>
+            </button>
+            <button id="nav-tab-ingredients" onclick="switchTab('ingredients')" class="nav-tab px-2.5 sm:px-3 py-1 text-xs font-semibold rounded-lg flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+              <i data-lucide="shopping-basket" class="w-3.5 h-3.5"></i>
+              <span class="hidden sm:inline">2. Zutaten</span>
+              <span class="sm:hidden">2. Liste</span>
+              <span id="badge-ingredients-count" class="ml-0.5 px-1.5 py-0.2 text-[10px] rounded-full bg-slate-200 text-slate-700 font-bold">0</span>
+            </button>
+            <button id="nav-tab-scout" onclick="switchTab('scout')" class="nav-tab px-2.5 sm:px-3 py-1 text-xs font-semibold rounded-lg flex items-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+              <i data-lucide="scan-search" class="w-3.5 h-3.5"></i>
+              <span class="hidden sm:inline">3. Supermarkt-Scout</span>
+              <span class="sm:hidden">3. Scout</span>
+              <span id="badge-scout-status" class="hidden ml-0.5 px-1.5 py-0.2 text-[10px] rounded-full bg-emerald-100 text-emerald-700 font-bold">Scouted</span>
+            </button>
+          </nav>
+
+          <div class="h-4 w-px bg-slate-200 mx-0.5 hidden sm:block"></div>
+
+          <!-- User Authentication Header Container -->
+          <div id="auth-header-container" class="flex items-center">
+            <!-- Anonymous Guest State: Login with Google button -->
+            <button id="btn-login-google" onclick="openLoginModal()" class="px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-300 hover:border-slate-400 bg-white hover:bg-slate-50 text-slate-700 shadow-2xs flex items-center gap-1.5 transition cursor-pointer" title="Mit Google anmelden, um Einstellungen, Favoriten und Statistiken in der Cloud zu sichern">
+              <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              </svg>
+              <span class="hidden md:inline">Google Login</span>
+              <span class="md:hidden">Login</span>
+            </button>
+
+            <!-- Authenticated State: User Pill (Shown when logged in) -->
+            <button id="btn-user-profile" onclick="openUserProfileModal()" class="hidden px-2 py-0.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 flex items-center gap-1.5 transition cursor-pointer shadow-2xs" title="Mein Profil & Statistiken ansehen">
+              <img id="header-user-avatar" src="" alt="Avatar" class="w-6 h-6 rounded-full object-cover border border-slate-200 bg-white shrink-0">
+              <span id="header-user-name" class="text-xs font-bold text-slate-800 max-w-[90px] truncate">User</span>
+              <span class="text-[9px] bg-emerald-100 text-emerald-800 font-black px-1.5 py-0.2 rounded-full hidden sm:inline-flex items-center gap-0.5">
+                <span>☁️</span>
+                <span class="hidden md:inline">Sync</span>
+              </span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -76,10 +111,22 @@
       <!-- Unified Clean Calendar Toolbar -->
       <div class="bg-white rounded-xl p-2.5 border border-slate-200 shadow-2xs mb-2 flex flex-wrap items-center justify-between gap-2.5 text-xs">
         
-        <!-- Left: Horizon & Calendar Week Navigator -->
+        <!-- Left: Horizon, Week Navigator & View Mode -->
         <div class="flex items-center gap-2 flex-wrap">
-          <!-- Horizon Segments -->
-          <div class="inline-flex bg-slate-100 p-0.5 rounded-lg border border-slate-200 font-bold text-slate-600">
+          <!-- View Mode Switch (7 Tage vs Aktueller Monat) -->
+          <div class="inline-flex bg-slate-100 p-0.5 rounded-lg border border-slate-200 font-bold">
+            <button onclick="setCalendarViewMode('week')" id="view-mode-week" class="px-2.5 py-1 rounded-md font-bold bg-white text-slate-900 shadow-2xs transition flex items-center gap-1 cursor-pointer">
+              <i data-lucide="columns-3" class="w-3 h-3 text-red-600"></i>
+              <span>7 Tage</span>
+            </button>
+            <button onclick="setCalendarViewMode('month')" id="view-mode-month" class="px-2.5 py-1 rounded-md font-medium text-slate-600 hover:text-slate-900 transition flex items-center gap-1 cursor-pointer">
+              <i data-lucide="calendar" class="w-3 h-3 text-slate-500"></i>
+              <span id="label-current-month-btn">Aktueller Monat</span>
+            </button>
+          </div>
+
+          <!-- Horizon Segments (for multi-week planning) -->
+          <div id="horizon-selector-group" class="inline-flex bg-slate-100 p-0.5 rounded-lg border border-slate-200 font-bold text-slate-600">
             <button onclick="setWeeksCount(1)" id="horizon-btn-1" class="horizon-pill active px-2.5 py-1 rounded-md bg-white shadow-2xs text-red-700 transition cursor-pointer">1 Wo</button>
             <button onclick="setWeeksCount(2)" id="horizon-btn-2" class="horizon-pill px-2.5 py-1 rounded-md hover:text-slate-900 transition cursor-pointer">2 Wo</button>
             <button onclick="setWeeksCount(3)" id="horizon-btn-3" class="horizon-pill px-2.5 py-1 rounded-md hover:text-slate-900 transition cursor-pointer">3 Wo</button>
@@ -87,7 +134,7 @@
           </div>
 
           <!-- Week Navigator -->
-          <div class="inline-flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg p-0.5 font-bold">
+          <div id="week-navigator-group" class="inline-flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg p-0.5 font-bold">
             <button onclick="changeActiveWeek(-1)" id="btn-prev-week" class="p-1 rounded-md hover:bg-white text-slate-500 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer" title="Vorherige Woche">
               <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
             </button>
@@ -96,21 +143,9 @@
               <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
             </button>
           </div>
-
-          <!-- View Mode Switch -->
-          <div class="inline-flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
-            <button onclick="setCalendarViewMode('week')" id="view-mode-week" class="px-2.5 py-1 rounded-md font-bold bg-white text-slate-900 shadow-2xs transition flex items-center gap-1 cursor-pointer">
-              <i data-lucide="columns-3" class="w-3 h-3 text-slate-500"></i>
-              <span>7 Tage</span>
-            </button>
-            <button onclick="setCalendarViewMode('multi')" id="view-mode-multi" class="px-2.5 py-1 rounded-md font-medium text-slate-600 hover:text-slate-900 transition flex items-center gap-1 cursor-pointer">
-              <i data-lucide="layout-grid" class="w-3 h-3 text-slate-500"></i>
-              <span>Monat</span>
-            </button>
-          </div>
         </div>
 
-        <!-- Center: Clean Diet Filter Pills & Allergen Dropdown Toggle -->
+        <!-- Center: Diäten & Allergien -->
         <div class="flex items-center gap-1 flex-wrap">
           <button onclick="setDietFilter('all')" class="diet-filter-pill active px-2.5 py-1 rounded-lg font-semibold bg-red-100 text-red-800 border border-red-200 transition cursor-pointer" data-filter="all">Alle</button>
           <button onclick="setDietFilter('austrian')" class="diet-filter-pill px-2.5 py-1 rounded-lg font-medium text-slate-600 hover:bg-slate-100 transition cursor-pointer" data-filter="austrian">🇦🇹 Österr.</button>
@@ -122,7 +157,7 @@
             <span id="badge-favorites-count" class="px-1 py-0.2 text-[9px] rounded-full bg-red-100 text-red-800 font-bold">0</span>
           </button>
 
-          <!-- Subtle Allergies Button that toggles a neat drawer -->
+          <!-- Allergies Button that toggles a neat drawer -->
           <button onclick="toggleAllergenDrawer()" id="btn-toggle-allergens" class="px-2.5 py-1 rounded-lg font-medium bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 transition flex items-center gap-1 cursor-pointer">
             <i data-lucide="shield-alert" class="w-3 h-3 text-amber-500"></i>
             <span>Allergien</span>
@@ -130,8 +165,24 @@
           </button>
         </div>
 
-        <!-- Right: Servings, Lunch Checkbox & Primary Actions -->
-        <div class="flex items-center gap-2 flex-wrap">
+        <!-- Right: Meal Slots (Breakfast, Lunch, Dinner), WHO Profile, Add Meal & Actions -->
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <!-- Meal Slot Toggles -->
+          <div class="inline-flex items-center gap-1 bg-slate-50 p-0.5 rounded-lg border border-slate-200 text-xs">
+            <label class="flex items-center gap-1 px-1.5 py-0.5 rounded cursor-pointer hover:bg-slate-100 transition select-none font-semibold text-slate-700" title="Frühstück im Plan generieren">
+              <input type="checkbox" id="toggle-slot-breakfast" onchange="onToggleMealSlot('breakfast', this.checked)" class="w-3.5 h-3.5 rounded text-red-600 focus:ring-red-500">
+              <span>🥐 Früh</span>
+            </label>
+            <label class="flex items-center gap-1 px-1.5 py-0.5 rounded cursor-pointer hover:bg-slate-100 transition select-none font-semibold text-slate-700" title="Mittagessen im Plan generieren">
+              <input type="checkbox" id="toggle-slot-lunch" onchange="onToggleMealSlot('lunch', this.checked)" class="w-3.5 h-3.5 rounded text-red-600 focus:ring-red-500">
+              <span>🥗 Mittag</span>
+            </label>
+            <label class="flex items-center gap-1 px-1.5 py-0.5 rounded cursor-pointer hover:bg-slate-100 transition select-none font-semibold text-slate-700" title="Abendessen im Plan generieren">
+              <input type="checkbox" id="toggle-slot-dinner" onchange="onToggleMealSlot('dinner', this.checked)" checked class="w-3.5 h-3.5 rounded text-red-600 focus:ring-red-500">
+              <span>🍲 Abend</span>
+            </label>
+          </div>
+
           <!-- Servings Select -->
           <div class="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg border border-slate-200 text-xs">
             <i data-lucide="users" class="w-3 h-3 text-slate-400"></i>
@@ -144,11 +195,17 @@
             </select>
           </div>
 
-          <!-- Lunch Toggle -->
-          <label class="flex items-center gap-1.5 cursor-pointer bg-slate-50 px-2 py-1 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 select-none hover:bg-slate-100 transition">
-            <input type="checkbox" id="toggle-lunch" onchange="onToggleLunch(this.checked)" class="w-3.5 h-3.5 rounded text-red-600 focus:ring-red-500">
-            <span>+ Mittag</span>
-          </label>
+          <!-- WHO Personal Profile Button -->
+          <button onclick="openWhoProfileModal()" class="bg-blue-50 hover:bg-blue-100 text-blue-800 font-bold px-2.5 py-1 rounded-lg border border-blue-200 shadow-2xs flex items-center gap-1 transition cursor-pointer" title="Persönliche Daten & WHO Nährwert-Empfehlungen anpassen">
+            <i data-lucide="user-check" class="w-3 h-3 text-blue-600"></i>
+            <span>WHO Profil</span>
+          </button>
+
+          <!-- Add Custom Meal Button -->
+          <button onclick="openAddMealModal()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-lg border border-emerald-200 shadow-2xs flex items-center gap-1 transition cursor-pointer" title="Eigenes Rezept hinzufügen">
+            <i data-lucide="plus-circle" class="w-3 h-3 text-emerald-600"></i>
+            <span>+ Rezept</span>
+          </button>
 
           <!-- A4 Print Button -->
           <button onclick="printA4WeekPlan()" class="bg-white hover:bg-slate-50 text-slate-700 font-bold px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs flex items-center gap-1 transition cursor-pointer" title="Druckt den Plan auf eine einzelne A4-Seite">
@@ -157,7 +214,7 @@
           </button>
 
           <!-- Reroll Plan Button -->
-          <button onclick="rollEntirePlan()" class="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold px-3.5 py-1 rounded-lg shadow-xs flex items-center gap-1.5 transition active:scale-95 cursor-pointer">
+          <button onclick="rollEntirePlan()" class="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold px-3 py-1 rounded-lg shadow-xs flex items-center gap-1.5 transition active:scale-95 cursor-pointer" title="Generiert neue Gerichte (gesperrte 🔒 Mahlzeiten bleiben erhalten)">
             <i data-lucide="dice-5" class="w-3.5 h-3.5"></i>
             <span>Neu planen</span>
           </button>
@@ -177,30 +234,74 @@
         <button id="btn-reset-allergens" onclick="resetAllergenFilters()" class="text-xs text-red-600 hover:text-red-800 font-bold px-2 py-0.5 transition cursor-pointer">✕ Filter zurücksetzen</button>
       </div>
 
-      <!-- Slim Average Nutrition Strip (Clean & Informative) -->
-      <div class="bg-slate-100/90 rounded-lg px-3 py-1 mb-2.5 flex items-center justify-between text-xs text-slate-600 font-medium border border-slate-200/60">
-        <div class="flex items-center gap-1 text-[11px] text-slate-500">
-          <i data-lucide="activity" class="w-3 h-3 text-slate-400"></i>
-          <span>Wochen-Durchschnitt pro Mahlzeit:</span>
+      <!-- Dual Info Strip: WHO Richtwerte & Plan-Durchschnitt -->
+      <div class="bg-slate-100/90 rounded-xl px-3 py-1.5 mb-2.5 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600 font-medium border border-slate-200/80">
+        <!-- WHO Target Summary -->
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="font-bold text-slate-900 flex items-center gap-1">
+            <span class="text-blue-600">🎯 WHO-Tagesziel:</span>
+            <span id="who-summary-target" class="font-extrabold text-blue-900">2.250 kcal • 85g P • 280g KH • 72g F</span>
+          </span>
+          <button onclick="openWhoProfileModal()" class="text-[10px] text-blue-700 hover:underline font-semibold flex items-center gap-0.5">
+            <span>(Profil anpassen)</span>
+          </button>
         </div>
-        <div class="flex items-center gap-3 font-bold text-xs">
-          <span class="text-slate-900">🔥 <span id="nutri-avg-calories">560 kcal</span></span>
-          <span class="text-blue-700">💪 <span id="nutri-avg-protein">32 g</span> <span class="font-normal text-slate-500 text-[10px]">Protein</span></span>
-          <span class="text-emerald-700">🌾 <span id="nutri-avg-carbs">54 g</span> <span class="font-normal text-slate-500 text-[10px]">Carbs</span></span>
-          <span class="text-amber-700">🥑 <span id="nutri-avg-fat">21 g</span> <span class="font-normal text-slate-500 text-[10px]">Fett</span></span>
+
+        <!-- Plan Daily Average & Macro Toggle Notice -->
+        <div class="flex items-center gap-3 font-bold text-xs flex-wrap">
+          <span class="text-slate-500 font-normal text-[11px]">Ø Plan pro Tag:</span>
+          <span class="text-slate-900">🔥 <span id="nutri-avg-calories">1.950 kcal</span></span>
+          <span class="text-blue-700">💪 <span id="nutri-avg-protein">78 g</span> <span class="font-normal text-slate-400 text-[9px]">P</span></span>
+          <span class="text-emerald-700">🌾 <span id="nutri-avg-carbs">240 g</span> <span class="font-normal text-slate-400 text-[9px]">KH</span></span>
+          <span class="text-amber-700">🥑 <span id="nutri-avg-fat">65 g</span> <span class="font-normal text-slate-400 text-[9px]">F</span></span>
+          <span class="text-[10px] font-semibold bg-white border border-slate-200 px-2 py-0.5 rounded text-slate-600" title="Makros werden auf jeder Karte sowohl pro Portion als auch pro 100g angezeigt">
+            ⚖️ Portion & 100g
+          </span>
         </div>
       </div>
 
-      <!-- Calendar 7-Day Full Horizontal Width Grid View -->
+      <!-- Calendar 7-Day Full Horizontal Width Grid View (Default) -->
       <div id="calendar-week-view" class="block w-full">
         <div id="weekly-plan-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 w-full">
           <!-- Populated by JS for Montag bis Sonntag across full width -->
         </div>
       </div>
 
-      <!-- Multi-Week Month Overview Grid -->
-      <div id="calendar-multi-view" class="hidden space-y-4 w-full">
-        <!-- Populated by JS -->
+      <!-- Current Month Calendar View (Aktueller Monat) -->
+      <div id="calendar-month-view" class="hidden w-full bg-white rounded-2xl border border-slate-200 shadow-2xs p-3">
+        <!-- Month Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+          <div class="flex items-center gap-2">
+            <i data-lucide="calendar" class="w-5 h-5 text-red-600"></i>
+            <h3 id="month-view-title" class="text-base font-black text-slate-900">Oktober 2026</h3>
+            <span class="text-xs bg-red-100 text-red-800 font-bold px-2 py-0.5 rounded-full">Monatsübersicht</span>
+          </div>
+          <div class="flex items-center gap-1 text-xs">
+            <button onclick="changeCurrentMonth(-1)" class="p-1 rounded-lg border border-slate-200 hover:bg-slate-50 transition cursor-pointer" title="Vorheriger Monat">
+              <i data-lucide="chevron-left" class="w-4 h-4"></i>
+            </button>
+            <button onclick="goToCurrentMonth()" class="px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 font-bold transition cursor-pointer">Heute</button>
+            <button onclick="changeCurrentMonth(1)" class="p-1 rounded-lg border border-slate-200 hover:bg-slate-50 transition cursor-pointer" title="Nächster Monat">
+              <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Month Weekday Headers -->
+        <div class="grid grid-cols-7 gap-1 text-center font-bold text-xs text-slate-500 mb-1.5 uppercase tracking-wider text-[11px]">
+          <div>Mo</div>
+          <div>Di</div>
+          <div>Mi</div>
+          <div>Do</div>
+          <div>Fr</div>
+          <div>Sa</div>
+          <div>So</div>
+        </div>
+
+        <!-- Month Days Grid (35-42 cells) -->
+        <div id="month-days-grid" class="grid grid-cols-7 gap-1.5">
+          <!-- Rendered via JS -->
+        </div>
       </div>
     </section>
 
@@ -396,7 +497,7 @@
 
   </main>
 
-  <!-- Recipe Detail Modal -->
+  <!-- Recipe Detail Modal (with Portion & 100g Macros) -->
   <div id="recipe-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-3 no-print">
     <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 flex flex-col">
       <div class="p-5 border-b border-slate-100 flex items-start justify-between">
@@ -422,25 +523,32 @@
       </div>
 
       <div class="p-5 space-y-4">
-        <!-- Nutrition Grid in Modal -->
+        <!-- Dual Nutrition Grid: Pro Portion & Pro 100g -->
         <div>
-          <h4 class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Nährwerte pro Portion</h4>
-          <div class="grid grid-cols-4 gap-2 text-center text-xs">
-            <div class="bg-amber-50 p-2 rounded-lg border border-amber-200">
-              <span class="text-amber-700 font-medium block text-[9px]">Kalorien</span>
-              <span id="modal-nutri-calories" class="font-black text-xs text-amber-950">680 kcal</span>
+          <div class="flex items-center justify-between mb-1.5">
+            <h4 class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Makronährstoffe</h4>
+            <span id="modal-portion-weight" class="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">Portion: ~380g</span>
+          </div>
+          <div class="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
+            <div class="grid grid-cols-4 bg-slate-50 py-1 text-center text-[10px] font-bold uppercase text-slate-500 border-b border-slate-200">
+              <span>Kalorien</span>
+              <span class="text-blue-600">Eiweiß</span>
+              <span class="text-emerald-600">Carbs</span>
+              <span class="text-amber-600">Fett</span>
             </div>
-            <div class="bg-blue-50 p-2 rounded-lg border border-blue-200">
-              <span class="text-blue-700 font-medium block text-[9px]">Eiweiß</span>
-              <span id="modal-nutri-protein" class="font-black text-xs text-blue-950">42 g</span>
+            <!-- Row 1: Pro Portion -->
+            <div class="grid grid-cols-4 py-2 text-center text-xs font-black text-slate-900 border-b border-slate-100 bg-white">
+              <div><span id="modal-nutri-calories">680 kcal</span><span class="block text-[9px] font-semibold text-slate-400">pro Port.</span></div>
+              <div class="border-l border-slate-100 text-blue-700"><span id="modal-nutri-protein">42 g</span><span class="block text-[9px] font-semibold text-slate-400">pro Port.</span></div>
+              <div class="border-l border-slate-100 text-emerald-700"><span id="modal-nutri-carbs">48 g</span><span class="block text-[9px] font-semibold text-slate-400">pro Port.</span></div>
+              <div class="border-l border-slate-100 text-amber-700"><span id="modal-nutri-fat">32 g</span><span class="block text-[9px] font-semibold text-slate-400">pro Port.</span></div>
             </div>
-            <div class="bg-emerald-50 p-2 rounded-lg border border-emerald-200">
-              <span class="text-emerald-700 font-medium block text-[9px]">Kohlenhydrate</span>
-              <span id="modal-nutri-carbs" class="font-black text-xs text-emerald-950">48 g</span>
-            </div>
-            <div class="bg-purple-50 p-2 rounded-lg border border-purple-200">
-              <span class="text-purple-700 font-medium block text-[9px]">Fett</span>
-              <span id="modal-nutri-fat" class="font-black text-xs text-purple-950">32 g</span>
+            <!-- Row 2: Pro 100g -->
+            <div class="grid grid-cols-4 py-1.5 text-center text-[11px] font-bold text-slate-600 bg-slate-50/60">
+              <div><span id="modal-nutri-calories-100g">178 kcal</span><span class="block text-[8px] font-normal text-slate-400">/100g</span></div>
+              <div class="border-l border-slate-200/60"><span id="modal-nutri-protein-100g">11.0 g</span><span class="block text-[8px] font-normal text-slate-400">/100g</span></div>
+              <div class="border-l border-slate-200/60"><span id="modal-nutri-carbs-100g">12.6 g</span><span class="block text-[8px] font-normal text-slate-400">/100g</span></div>
+              <div class="border-l border-slate-200/60"><span id="modal-nutri-fat-100g">8.4 g</span><span class="block text-[8px] font-normal text-slate-400">/100g</span></div>
             </div>
           </div>
         </div>
@@ -468,6 +576,410 @@
 
       <div class="p-3 bg-slate-50 border-t border-slate-100 flex justify-end">
         <button onclick="closeRecipeModal()" class="px-3.5 py-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 transition cursor-pointer">Schließen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WHO Nährwert-Profil Modal (Persönliche Daten & Bedarfsrechner) -->
+  <div id="who-profile-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-3 no-print">
+    <div class="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 flex flex-col">
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+            <i data-lucide="user-check" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-black text-sm text-slate-900 leading-tight">Dein WHO Nährwert-Profil</h3>
+            <p class="text-[11px] text-slate-500">Tagesbedarf nach WHO / D-A-CH Richtlinien</p>
+          </div>
+        </div>
+        <button onclick="closeWhoProfileModal()" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center cursor-pointer">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="p-4 space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Geschlecht</label>
+            <select id="who-input-gender" onchange="calculateLiveWhoTargets()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-semibold">
+              <option value="male">Männlich</option>
+              <option value="female">Weiblich</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Alter (Jahre)</label>
+            <input type="number" id="who-input-age" value="30" min="15" max="110" oninput="calculateLiveWhoTargets()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-semibold">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Gewicht (kg)</label>
+            <input type="number" id="who-input-weight" value="75" min="30" max="250" oninput="calculateLiveWhoTargets()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-semibold">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Größe (cm)</label>
+            <input type="number" id="who-input-height" value="178" min="100" max="230" oninput="calculateLiveWhoTargets()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-semibold">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Aktivitätslevel (PAL)</label>
+          <select id="who-input-pal" onchange="calculateLiveWhoTargets()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-semibold">
+            <option value="1.4">Sitzend (Bürojob, wenig Bewegung – PAL 1.4)</option>
+            <option value="1.6" selected>Mäßig aktiv (Stehende Tätigkeit, 1-2x Sport – PAL 1.6)</option>
+            <option value="1.8">Sehr aktiv (Körperliche Arbeit, 3-5x Sport – PAL 1.8)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Ernährungsziel</label>
+          <select id="who-input-goal" onchange="calculateLiveWhoTargets()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-semibold">
+            <option value="maintain" selected>Gewicht halten (WHO Normalbedarf)</option>
+            <option value="lose">Gesund abnehmen (-350 kcal Defizit)</option>
+            <option value="gain">Muskelaufbau (+300 kcal Überschuss)</option>
+          </select>
+        </div>
+
+        <!-- Live WHO Targets Preview Box -->
+        <div class="bg-blue-50/80 rounded-xl p-3 border border-blue-200 text-slate-800">
+          <h4 class="font-extrabold text-[11px] text-blue-900 uppercase tracking-wide mb-1.5 flex items-center justify-between">
+            <span class="flex items-center gap-1">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-blue-600"></i>
+              <span>Errechneter Tagesbedarf (WHO)</span>
+            </span>
+            <span class="text-[9px] text-blue-600 font-semibold">Mifflin-St Jeor</span>
+          </h4>
+          <div class="grid grid-cols-4 gap-1 text-center">
+            <div class="bg-white p-1.5 rounded-lg border border-blue-100 shadow-2xs">
+              <span class="block text-[8px] font-bold text-slate-400 uppercase">Kcal</span>
+              <span id="who-live-kcal" class="font-black text-xs text-slate-900">2.250</span>
+            </div>
+            <div class="bg-white p-1.5 rounded-lg border border-blue-100 shadow-2xs">
+              <span class="block text-[8px] font-bold text-blue-500 uppercase">Protein</span>
+              <span id="who-live-protein" class="font-black text-xs text-blue-700">85g</span>
+            </div>
+            <div class="bg-white p-1.5 rounded-lg border border-blue-100 shadow-2xs">
+              <span class="block text-[8px] font-bold text-emerald-500 uppercase">Carbs</span>
+              <span id="who-live-carbs" class="font-black text-xs text-emerald-700">280g</span>
+            </div>
+            <div class="bg-white p-1.5 rounded-lg border border-blue-100 shadow-2xs">
+              <span class="block text-[8px] font-bold text-amber-500 uppercase">Fett</span>
+              <span id="who-live-fat" class="font-black text-xs text-amber-700">72g</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+        <button onclick="closeWhoProfileModal()" class="text-xs font-semibold text-slate-500 hover:text-slate-800 px-3 py-1 cursor-pointer">Abbrechen</button>
+        <button onclick="saveWhoProfile()" class="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition cursor-pointer">Speichern & Anwenden</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Custom Meal Modal -->
+  <div id="add-meal-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-3 no-print">
+    <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 flex flex-col">
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">🍲</span>
+          <div>
+            <h3 class="font-black text-sm text-slate-900 leading-tight">Neues Gericht hinzufügen</h3>
+            <p class="text-[11px] text-slate-500">Wird im Kalender & Supermarkt-Scout berücksichtigt</p>
+          </div>
+        </div>
+        <button onclick="closeAddMealModal()" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center cursor-pointer">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form id="form-add-meal" onsubmit="submitNewMeal(event)" class="p-4 space-y-3 text-xs">
+        <div class="grid grid-cols-4 gap-2">
+          <div class="col-span-3">
+            <label class="block font-bold text-slate-700 mb-1">Name des Gerichts *</label>
+            <input type="text" id="new-meal-name" required placeholder="z. B. Steirisches Kürbisrisotto" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-semibold">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Emoji</label>
+            <input type="text" id="new-meal-emoji" value="🍲" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-semibold text-center text-base">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Mahlzeit</label>
+            <select id="new-meal-slot" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-semibold">
+              <option value="dinner" selected>Abendessen</option>
+              <option value="lunch">Mittagessen</option>
+              <option value="breakfast">Frühstück</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Dauer (Min)</label>
+            <input type="number" id="new-meal-time" value="25" min="5" max="240" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-semibold">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Portionsgewicht (g)</label>
+            <input type="number" id="new-meal-weight" value="380" min="50" max="1500" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-semibold">
+          </div>
+        </div>
+
+        <!-- Diäten & Allergene -->
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Ernährung</label>
+            <select id="new-meal-diet" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-semibold">
+              <option value="classic">Klassisch / Fleisch</option>
+              <option value="vegetarian">🌱 Vegetarisch</option>
+              <option value="vegan">🌿 Vegan</option>
+              <option value="fish">🐟 Fisch</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Enthaltene Allergene</label>
+            <div class="flex flex-wrap gap-1 text-[10px]">
+              <label class="inline-flex items-center gap-0.5 bg-slate-50 px-1.5 py-0.5 rounded border"><input type="checkbox" value="gluten" class="new-meal-allergen"> Gluten</label>
+              <label class="inline-flex items-center gap-0.5 bg-slate-50 px-1.5 py-0.5 rounded border"><input type="checkbox" value="lactose" class="new-meal-allergen"> Laktose</label>
+              <label class="inline-flex items-center gap-0.5 bg-slate-50 px-1.5 py-0.5 rounded border"><input type="checkbox" value="egg" class="new-meal-allergen"> Ei</label>
+              <label class="inline-flex items-center gap-0.5 bg-slate-50 px-1.5 py-0.5 rounded border"><input type="checkbox" value="nuts" class="new-meal-allergen"> Nüsse</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nährwerte pro Portion (mit automatischer 100g Umrechnung) -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Nährwerte pro Portion (Portionsgröße)</label>
+          <div class="grid grid-cols-4 gap-1.5">
+            <div>
+              <span class="block text-[9px] text-slate-400 font-semibold uppercase">Kalorien (kcal)</span>
+              <input type="number" id="new-meal-cal" value="520" min="50" max="2500" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-center font-bold">
+            </div>
+            <div>
+              <span class="block text-[9px] text-blue-500 font-semibold uppercase">Protein (g)</span>
+              <input type="number" id="new-meal-prot" value="28" min="0" max="200" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-center font-bold">
+            </div>
+            <div>
+              <span class="block text-[9px] text-emerald-500 font-semibold uppercase">Carbs (g)</span>
+              <input type="number" id="new-meal-carbs" value="56" min="0" max="300" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-center font-bold">
+            </div>
+            <div>
+              <span class="block text-[9px] text-amber-500 font-semibold uppercase">Fett (g)</span>
+              <input type="number" id="new-meal-fat" value="20" min="0" max="200" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-center font-bold">
+            </div>
+          </div>
+        </div>
+
+        <!-- Zutatenliste für Supermarkt-Scout -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block font-bold text-slate-700">Zutaten für Einkaufsliste & Scout</label>
+            <button type="button" onclick="addNewIngredientRow()" class="text-[10px] text-emerald-700 hover:text-emerald-900 font-bold flex items-center gap-0.5 cursor-pointer">
+              <i data-lucide="plus" class="w-3 h-3"></i>
+              <span>+ Zutat</span>
+            </button>
+          </div>
+          <div id="new-meal-ingredients-list" class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+            <!-- Dynamic rows -->
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+          <button type="button" onclick="closeAddMealModal()" class="text-xs font-semibold text-slate-500 hover:text-slate-800 px-3 py-1 cursor-pointer">Abbrechen</button>
+          <button type="submit" class="px-4 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs transition cursor-pointer">Rezept speichern</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Google Login & Account Modal -->
+  <div id="google-login-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-3 no-print">
+    <div class="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          <h3 class="font-black text-sm text-slate-900">Anmelden mit Google</h3>
+        </div>
+        <button onclick="closeLoginModal()" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center cursor-pointer">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4 text-xs text-slate-600">
+        <p class="leading-relaxed">
+          Verknüpfe dein Google-Konto, um deine <b>Präferenzen, Lieblingsrezepte, WHO-Profile</b> und <b>Spar-Statistiken</b> geräteübergreifend zu sichern.
+        </p>
+
+        <!-- Google Official Button Container (Rendered by Google GSI if Client ID is configured) -->
+        <div id="g_id_signin_container" class="flex justify-center my-1">
+          <div id="g_id_signin"></div>
+        </div>
+
+        <!-- One-Click Demo Google Login (Pre-configured for Thomas Simhofer) -->
+        <div class="border-t border-slate-100 pt-3">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Schnellstart / Google-Konto</span>
+          <button onclick="loginWithGoogleDemo()" class="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 p-2.5 rounded-xl flex items-center gap-3 transition text-left cursor-pointer group shadow-2xs">
+            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80" alt="Avatar" class="w-9 h-9 rounded-full object-cover border border-slate-200 shrink-0">
+            <div class="min-w-0 flex-grow">
+              <span class="font-bold text-slate-900 block truncate group-hover:text-blue-600">Thomas Simhofer</span>
+              <span class="text-[11px] text-slate-500 block truncate">thomas.simhofer@gmail.com</span>
+            </div>
+            <span class="text-xs text-blue-600 font-bold shrink-0">Login →</span>
+          </button>
+        </div>
+
+        <div class="bg-blue-50/70 rounded-xl p-2.5 border border-blue-100 text-[11px] text-blue-800">
+          💡 Deine bestehenden Gäste-Favoriten & Einstellungen werden bei der Anmeldung automatisch übernommen!
+        </div>
+      </div>
+
+      <div class="p-3 bg-slate-50 border-t border-slate-100 flex justify-end">
+        <button onclick="closeLoginModal()" class="px-3.5 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 cursor-pointer">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Profile, Cloud Preferences & Statistics Modal -->
+  <div id="user-profile-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-3 no-print">
+    <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 flex flex-col">
+      <!-- Modal Header -->
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+        <div class="flex items-center gap-3">
+          <img id="profile-user-avatar" src="" alt="Avatar" class="w-11 h-11 rounded-full object-cover border-2 border-white shadow-xs bg-white shrink-0">
+          <div>
+            <div class="flex items-center gap-1.5">
+              <h3 id="profile-user-name" class="font-black text-sm text-slate-900 leading-tight">Thomas Simhofer</h3>
+              <span class="text-[10px] font-black px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-800 flex items-center gap-0.5">
+                <span>Google</span>
+              </span>
+            </div>
+            <p id="profile-user-email" class="text-xs text-slate-500">thomas.simhofer@gmail.com</p>
+          </div>
+        </div>
+        <button onclick="closeUserProfileModal()" class="w-7 h-7 rounded-full bg-white hover:bg-slate-200 text-slate-500 flex items-center justify-center cursor-pointer border border-slate-200">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-5 text-xs">
+        <!-- 1. Statistics Cards -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="font-extrabold text-[11px] uppercase tracking-wider text-slate-400 flex items-center gap-1">
+              <i data-lucide="bar-chart-2" class="w-3.5 h-3.5 text-blue-600"></i>
+              <span>Persönliche Statistiken</span>
+            </h4>
+            <span class="text-[10px] text-slate-400 font-semibold" id="stats-last-active">Aktiv heute</span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+            <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+              <span class="text-slate-400 text-[10px] font-bold uppercase block">Pläne</span>
+              <span id="stat-plans-count" class="text-base font-black text-slate-900">0</span>
+              <span class="text-[9px] text-slate-500 block">erstellt</span>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+              <span class="text-emerald-600 text-[10px] font-bold uppercase block">Ersparnis</span>
+              <span id="stat-saved-money" class="text-base font-black text-emerald-700">0,00 €</span>
+              <span class="text-[9px] text-slate-500 block">Bestpreise</span>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+              <span class="text-blue-600 text-[10px] font-bold uppercase block">Gekocht</span>
+              <span id="stat-cooked-count" class="text-base font-black text-blue-700">0</span>
+              <span class="text-[9px] text-slate-500 block">Gerichte</span>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+              <span class="text-amber-600 text-[10px] font-bold uppercase block">Top-Markt</span>
+              <span id="stat-fav-store" class="text-base font-black text-amber-700 truncate block">SPAR</span>
+              <span class="text-[9px] text-slate-500 block">Favorit</span>
+            </div>
+          </div>
+
+          <!-- Quick Cook Tracker Action -->
+          <div class="mt-2.5 p-2 bg-slate-100/70 rounded-xl flex items-center justify-between">
+            <span class="text-[11px] font-semibold text-slate-700">Hast du heute ein Gericht gekocht?</span>
+            <button onclick="recordMealCookedAction()" class="px-2.5 py-1 bg-white hover:bg-blue-50 text-blue-700 border border-slate-200 rounded-lg font-bold text-xs shadow-2xs transition flex items-center gap-1 cursor-pointer">
+              <span>🍲 Als gekocht markieren</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Preferences & Cloud Sync Summary -->
+        <div>
+          <h4 class="font-extrabold text-[11px] uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1">
+            <i data-lucide="cloud" class="w-3.5 h-3.5 text-emerald-600"></i>
+            <span>Gespeicherte Cloud-Präferenzen</span>
+          </h4>
+
+          <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 overflow-hidden">
+            <div class="p-2.5 flex items-center justify-between">
+              <span class="font-semibold text-slate-700 flex items-center gap-1.5">
+                <span>❤️</span>
+                <span>Lieblingsgerichte</span>
+              </span>
+              <span id="profile-pref-fav-count" class="font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded text-xs">0 Gerichte</span>
+            </div>
+
+            <div class="p-2.5 flex items-center justify-between">
+              <span class="font-semibold text-slate-700 flex items-center gap-1.5">
+                <span>⭐</span>
+                <span>Lieblingsprodukte (SPAR/BILLA/HOFER)</span>
+              </span>
+              <span id="profile-pref-fav-products-count" class="font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded text-xs">0 Produkte</span>
+            </div>
+
+            <div class="p-2.5 flex items-center justify-between">
+              <span class="font-semibold text-slate-700 flex items-center gap-1.5">
+                <span>🎯</span>
+                <span>WHO-Profil</span>
+              </span>
+              <span id="profile-pref-who-summary" class="font-bold text-blue-800 text-xs">2.250 kcal (Normalbedarf)</span>
+            </div>
+
+            <div class="p-2.5 flex items-center justify-between">
+              <span class="font-semibold text-slate-700 flex items-center gap-1.5">
+                <span>🥐</span>
+                <span>Aktive Mahlzeiten</span>
+              </span>
+              <span id="profile-pref-slots-summary" class="font-bold text-slate-700 text-xs">Abendessen</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Recent Activity Log -->
+        <div>
+          <h4 class="font-extrabold text-[11px] uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1">
+            <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-500"></i>
+            <span>Letzte Aktivitäten</span>
+          </h4>
+          <div id="profile-recent-activity" class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+            <!-- Filled via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+        <button onclick="logoutUser()" class="px-3 py-1.5 text-xs font-bold text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition cursor-pointer flex items-center gap-1">
+          <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+          <span>Abmelden</span>
+        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="syncAllPreferencesToCloud()" class="px-3 py-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition cursor-pointer flex items-center gap-1">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            <span>Jetzt synchronisieren</span>
+          </button>
+          <button onclick="closeUserProfileModal()" class="px-3.5 py-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 transition cursor-pointer">Schließen</button>
+        </div>
       </div>
     </div>
   </div>

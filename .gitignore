@@ -22,3 +22,7 @@ desktop.ini
 
 ## Logs
 *.log
+
+## User data & custom meals
+data/users/*.json
+custom_meals.json

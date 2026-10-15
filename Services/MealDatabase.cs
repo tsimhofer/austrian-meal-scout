@@ -1,27 +1,113 @@
 using AustrianMealScout.Models;
+using System.Text.Json;
 
 namespace AustrianMealScout.Services;
 
 public class MealDatabase
 {
     private readonly List<Meal> _meals;
+    private static readonly string CustomMealsFilePath = Path.Combine(AppContext.BaseDirectory, "custom_meals.json");
 
     public MealDatabase()
     {
         _meals = InitializeMeals();
+        LoadCustomMeals();
     }
 
     public IReadOnlyList<Meal> GetAllMeals() => _meals;
 
     public Meal? GetMealById(string id) => _meals.FirstOrDefault(m => m.Id == id);
 
+    public Meal AddCustomMeal(Meal meal)
+    {
+        if (string.IsNullOrWhiteSpace(meal.Id))
+        {
+            var slug = meal.Name.ToLowerInvariant()
+                .Replace("ä", "ae").Replace("ö", "oe").Replace("ü", "ue").Replace("ß", "ss")
+                .Replace(" ", "-");
+            slug = System.Text.RegularExpressions.Regex.Replace(slug, @"[^a-z0-9\-]", "");
+            meal.Id = $"custom-{slug}-{Guid.NewGuid().ToString("N")[..4]}";
+        }
+        if (string.IsNullOrWhiteSpace(meal.Emoji))
+        {
+            meal.Emoji = "🍲";
+        }
+        if (!meal.Tags.Contains("custom"))
+        {
+            meal.Tags.Add("custom");
+        }
+
+        _meals.Insert(0, meal);
+        SaveCustomMeals();
+        return meal;
+    }
+
+    private void LoadCustomMeals()
+    {
+        try
+        {
+            if (File.Exists(CustomMealsFilePath))
+            {
+                var json = File.ReadAllText(CustomMealsFilePath);
+                var custom = JsonSerializer.Deserialize<List<Meal>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (custom != null)
+                {
+                    foreach (var m in custom)
+                    {
+                        if (!_meals.Any(existing => existing.Id == m.Id))
+                        {
+                            _meals.Insert(0, m);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error loading custom meals: {ex.Message}");
+        }
+    }
+
+    private void SaveCustomMeals()
+    {
+        try
+        {
+            var custom = _meals.Where(m => m.Id.StartsWith("custom-") || m.Tags.Contains("custom")).ToList();
+            var json = JsonSerializer.Serialize(custom, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(CustomMealsFilePath, json);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error saving custom meals: {ex.Message}");
+        }
+    }
+
     public List<Meal> GetFilteredMeals(
         string? diet = null,
         List<string>? excludedAllergens = null,
         List<string>? favoriteIds = null,
-        int? maxPrepTime = null)
+        int? maxPrepTime = null,
+        bool? isBreakfast = null)
     {
         var query = _meals.AsEnumerable();
+
+        // 0. Meal slot filter (Breakfast vs Lunch/Dinner)
+        if (isBreakfast.HasValue)
+        {
+            if (isBreakfast.Value)
+            {
+                query = query.Where(m => m.Tags.Contains("breakfast") || m.Category.Equals("Frühstück", StringComparison.OrdinalIgnoreCase));
+            }
+            else
+            {
+                // Non-breakfast meals (exclude breakfast-only meals unless needed)
+                var nonBreakfast = query.Where(m => !m.Tags.Contains("breakfast") && !m.Category.Equals("Frühstück", StringComparison.OrdinalIgnoreCase)).ToList();
+                if (nonBreakfast.Count > 0)
+                {
+                    query = nonBreakfast;
+                }
+            }
+        }
 
         // 1. Dietary Filtering (Strict Separation of Vegetarian & Vegan)
         if (!string.IsNullOrWhiteSpace(diet) && diet != "all")
@@ -64,7 +150,7 @@ public class MealDatabase
 
         var results = query.ToList();
 
-        // Fallback: If allergen/diet filters leave fewer than 3 meals, relax slightly to prevent crashes
+        // Fallback: If allergen/diet filters leave fewer than 1 meal, relax slot constraint or fallback
         if (results.Count == 0 && (excludedAllergens == null || excludedAllergens.Count == 0))
         {
             return _meals;
@@ -853,6 +939,243 @@ public class MealDatabase
                     new() { Name = "Knoblauchzehen & Peperoncino", SearchTerm = "Knoblauch", Amount = 4, Unit = "Zehen", Category = "Gemüse & Obst" },
                     new() { Name = "Kirschtomaten", SearchTerm = "Rispentomaten", Amount = 200, Unit = "g", Category = "Gemüse & Obst" },
                     new() { Name = "Frische Petersilie", SearchTerm = "Petersilie", Amount = 1, Unit = "Bund", Category = "Gemüse & Obst" }
+                }
+            },
+
+            // ==================== FRÜHSTÜCK / BREAKFAST (10 Rezepte) ====================
+
+            // --- 33. Wiener Frühstück ---
+            new Meal
+            {
+                Id = "wiener-fruehstueck",
+                Name = "Klassisches Wiener Frühstück mit Kaisersemmel & weichem Ei",
+                Description = "Frische Handsemmel mit feiner Teebutter, original Marillenmarmelade, einem perfekt gekochten weichen Bio-Ei und Schnittlauch.",
+                Category = "Frühstück",
+                Tags = new() { "breakfast", "austrian", "vegetarian", "classic" },
+                Allergens = new() { "gluten", "egg", "lactose" },
+                PrepTimeMinutes = 10,
+                Difficulty = "Einfach",
+                Emoji = "🥐",
+                DefaultServings = 2,
+                Nutrition = new() { Calories = 440, Protein = 16, Carbs = 52, Fat = 18, Fiber = 3 },
+                Ingredients = new()
+                {
+                    new() { Name = "Kaisersemmeln frisch", SearchTerm = "Semmeln", Amount = 2, Unit = "Stk", Category = "Brot & Gebäck" },
+                    new() { Name = "Teebutter", SearchTerm = "Teebutter", Amount = 30, Unit = "g", Category = "Milchprodukte & Eier" },
+                    new() { Name = "Marillenmarmelade", SearchTerm = "Marillenmarmelade", Amount = 40, Unit = "g", Category = "Vorratsschrank" },
+                    new() { Name = "Bio-Eier", SearchTerm = "Eier", Amount = 2, Unit = "Stk", Category = "Milchprodukte & Eier" }
+                }
+            },
+
+            // --- 34. Steirische Eierspeis ---
+            new Meal
+            {
+                Id = "steirische-eierspeis",
+                Name = "Steirische Eierspeis mit Kürbiskernöl & Bauernbrot",
+                Description = "Saftiges Rührei aus Bio-Eiern, verfeinert mit gerösteten steirischen Kürbiskernen, echtem Kürbiskernöl g.g.A. und dunklem Krustenbrot.",
+                Category = "Frühstück",
+                Tags = new() { "breakfast", "austrian", "vegetarian", "healthy" },
+                Allergens = new() { "gluten", "egg" },
+                PrepTimeMinutes = 12,
+                Difficulty = "Einfach",
+                Emoji = "🍳",
+                DefaultServings = 2,
+                Nutrition = new() { Calories = 480, Protein = 24, Carbs = 38, Fat = 26, Fiber = 4 },
+                Ingredients = new()
+                {
+                    new() { Name = "Bio-Eier", SearchTerm = "Eier", Amount = 4, Unit = "Stk", Category = "Milchprodukte & Eier" },
+                    new() { Name = "Steirisches Kürbiskernöl", SearchTerm = "Kürbiskernöl", Amount = 20, Unit = "ml", Category = "Vorratsschrank", IsPantryStaple = true },
+                    new() { Name = "Kürbiskerne geröstet", SearchTerm = "Kürbiskerne", Amount = 30, Unit = "g", Category = "Vorratsschrank" },
+                    new() { Name = "Bauernkrustenbrot", SearchTerm = "Bauernbrot", Amount = 150, Unit = "g", Category = "Brot & Gebäck" }
+                }
+            },
+
+            // --- 35. Waldbeeren-Porridge (Vegan) ---
+            new Meal
+            {
+                Id = "beeren-hafer-porridge",
+                Name = "Kerniges Waldbeeren-Porridge mit Hafermilch & Mandeln",
+                Description = "Cremig gekochte zarte Vollkorn-Haferflocken mit Mandel- oder Hafermilch, warmen Waldbeeren, Chiasamen und gerösteten Mandelblättchen.",
+                Category = "Frühstück",
+                Tags = new() { "breakfast", "vegan", "healthy", "budget" },
+                Allergens = new() { "nuts" },
+                PrepTimeMinutes = 10,
+                Difficulty = "Einfach",
+                Emoji = "🥣",
+                DefaultServings = 2,
+                Nutrition = new() { Calories = 420, Protein = 15, Carbs = 62, Fat = 12, Fiber = 9 },
+                Ingredients = new()
+                {
+                    new() { Name = "Zarte Haferflocken", SearchTerm = "Haferflocken", Amount = 120, Unit = "g", Category = "Vorratsschrank" },
+                    new() { Name = "Hafermilch oder Mandeldrink", SearchTerm = "Hafermilch", Amount = 350, Unit = "ml", Category = "Milchprodukte & Eier" },
+                    new() { Name = "Beerenmischung TK oder frisch", SearchTerm = "Beeren", Amount = 150, Unit = "g", Category = "Gemüse & Obst" },
+                    new() { Name = "Mandelblättchen & Chiasamen", SearchTerm = "Mandeln", Amount = 30, Unit = "g", Category = "Vorratsschrank" }
+                }
+            },
+
+            // --- 36. Wiener Birchermüsli ---
+            new Meal
+            {
+                Id = "wiener-birchermuesli",
+                Name = "Wiener Birchermüsli mit geriebenem Apfel & Walnüssen",
+                Description = "Über Nacht in Naturjoghurt und Milch eingeweichte Haferflocken mit frisch geriebenem Apfel, einem Hauch Blütenhonig und gehackten Walnüssen.",
+                Category = "Frühstück",
+                Tags = new() { "breakfast", "vegetarian", "healthy" },
+                Allergens = new() { "lactose", "nuts" },
+                PrepTimeMinutes = 10,
+                Difficulty = "Einfach",
+                Emoji = "🍏",
+                DefaultServings = 2,
+                Nutrition = new() { Calories = 450, Protein = 18, Carbs = 58, Fat = 16, Fiber = 7 },
+                Ingredients = new()
+                {
+                    new() { Name = "Haferflocken bio", SearchTerm = "Haferflocken", Amount = 100, Unit = "g", Category = "Vorratsschrank" },
+                    new() { Name = "Österreichisches Naturjoghurt", SearchTerm = "Naturjoghurt", Amount = 250, Unit = "g", Category = "Milchprodukte & Eier" },
+                    new() { Name = "Steirische Äpfel", SearchTerm = "Äpfel", Amount = 2, Unit = "Stk", Category = "Gemüse & Obst" },
+                    new() { Name = "Walnusskerne", SearchTerm = "Walnüsse", Amount = 40, Unit = "g", Category = "Vorratsschrank" },
+                    new() { Name = "Waldhonig", SearchTerm = "Honig", Amount = 25, Unit = "g", Category = "Vorratsschrank" }
+                }
+            },
+
+            // --- 37. Shakshuka mit Feta ---
+            new Meal
+            {
+                Id = "shakshuka-feta",
+                Name = "Würzige Tomaten-Paprika-Shakshuka mit Bio-Eiern & Feta",
+                Description = "In einer aromatischen Pfanne aus geschmorten Tomaten, bunten Paprikastreifen und Kreuzkümmel pochierte Eier, bestreut mit Schafskäse.",
+                Category = "Frühstück",
+                Tags = new() { "breakfast", "vegetarian", "healthy" },
+                Allergens = new() { "egg", "lactose" },
+                PrepTimeMinutes = 20,
+                Difficulty = "Einfach",
+                Emoji = "🥘",
+                DefaultServings = 2,
+                Nutrition = new() { Calories = 430, Protein = 22, Carbs = 28, Fat = 24, Fiber = 6 },
+                Ingredients = new()
+                {
+                    new() { Name = "Bio-Eier", SearchTerm = "Eier", Amount = 4, Unit = "Stk", Category = "Milchprodukte & Eier" },
+                    new() { Name = "Gehackte Tomaten Dose", SearchTerm = "Tomaten gehackt", Amount = 400, Unit = "g", Category = "Vorratsschrank" },
+                    new() { Name = "Bunte Paprika", SearchTerm = "Paprika", Amount = 2, Unit = "Stk", Category = "Gemüse & Obst" },
+                    new() { Name = "Feta Schafskäse", SearchTerm = "Feta", Amount = 100, Unit = "g", Category = "Milchprodukte & Eier" },
+                    new() { Name = "Fladenbrot oder Baguette", SearchTerm = "Baguette", Amount = 150, Unit = "g", Category = "Brot & Gebäck" }
+                }
+            },
+
+            // --- 38. Pikantes Liptauerbrot ---
+            new Meal
+            {
+                Id = "liptauer-schwarzbrot",
+                Name = "Pikantes Schnittlauch- & Liptauerbrot mit Radieschen",
+                Description = "Frisch zubereiteter steirisch-burgenländischer Topfen-Liptauer mit edelsüßem Paprika und Zwiebeln auf knusprigem Bauernbrot mit Radieschen.",
+                Category = "Frühstück",
+                Tags = new() { "breakfast", "austrian", "vegetarian" },
+                Allergens = new() { "gluten", "lactose" },
+                PrepTimeMinutes = 10,
+                Difficulty = "Einfach",
+                Emoji = "🥪",
+                DefaultServings = 2,
+                Nutrition = new() { Calories = 390, Protein = 20, Carbs = 45, Fat = 14, Fiber = 5 },
+                Ingredients = new()
+                {
+                    new() { Name = "Speisetopfen mager", SearchTerm = "Topfen", Amount = 250, Unit = "g", Category = "Milchprodukte & Eier" },
+                    new() { Name = "Sauerrahm", SearchTerm = "Sauerrahm", Amount = 50, Unit = "g", Category = "Milchprodukte & Eier" },
+                    new() { Name = "Bauernkrustenbrot", SearchTerm = "Bauernbrot", Amount = 160, Unit = "g", Category = "Brot & Gebäck" },
+                    new() { Name = "Radieschen frisch", SearchTerm = "Radieschen", Amount = 1, Unit = "Bund", Category = "Gemüse & Obst" },
+                    new() { Name = "Schnittlauch", SearchTerm = "Schnittlauch", Amount = 1, Unit = "Bund", Category = "Gemüse & Obst" }
+                }
+            },
+
+            // --- 39. Bananen-Hafer-Pancakes (Vegan) ---
+            new Meal
+            {
+                Id = "bananen-hafer-pancakes",
+                Name = "Fluffige Bananen-Hafer-Pancakes mit Beeren & Ahornsirup",
+                Description = "Goldbraun in der Pfanne gebackene vegane Pancakes aus reifen Bananen, zartem Hafer und Pflanzenmilch, serviert mit Ahornsirup und Beeren.",
+                Category = "Frühstück",
+                Tags = new() { "breakfast", "vegan", "sweet" },
+                Allergens = new() { },
+                PrepTimeMinutes = 15,
+                Difficulty = "Einfach",
+                Emoji = "🥞",
+                DefaultServings = 2,
+                Nutrition = new() { Calories = 460, Protein = 14, Carbs = 76, Fat = 10, Fiber = 7 },
+                Ingredients = new()
+                {
+                    new() { Name = "Reife Bananen", SearchTerm = "Bananen", Amount = 2, Unit = "Stk", Category = "Gemüse & Obst" },
+                    new() { Name = "Haferflocken fein", SearchTerm = "Haferflocken", Amount = 150, Unit = "g", Category = "Vorratsschrank" },
+                    new() { Name = "Haferdrink", SearchTerm = "Hafermilch", Amount = 200, Unit = "ml", Category = "Milchprodukte & Eier" },
+                    new() { Name = "Ahornsirup bio", SearchTerm = "Ahornsirup", Amount = 40, Unit = "ml", Category = "Vorratsschrank" },
+                    new() { Name = "Heidelbeeren frisch", SearchTerm = "Heidelbeeren", Amount = 125, Unit = "g", Category = "Gemüse & Obst" }
+                }
+            },
+
+            // --- 40. Avocado-Vollkornbrot mit pochiertem Ei ---
+            new Meal
+            {
+                Id = "avocado-vollkornbrot-ei",
+                Name = "Avocado-Vollkornbrot mit pochiertem Ei & Kresse",
+                Description = "Cremig zerdrückte Avocado mit Zitrone und Meersalz auf getoastetem Vollkornbrot, garniert mit wachsweichem pochiertem Ei und frischer Gartenkresse.",
+                Category = "Frühstück",
+                Tags = new() { "breakfast", "vegetarian", "healthy" },
+                Allergens = new() { "gluten", "egg" },
+                PrepTimeMinutes = 12,
+                Difficulty = "Einfach",
+                Emoji = "🥑",
+                DefaultServings = 2,
+                Nutrition = new() { Calories = 440, Protein = 17, Carbs = 36, Fat = 24, Fiber = 8 },
+                Ingredients = new()
+                {
+                    new() { Name = "Avocado Hass verzehrreif", SearchTerm = "Avocado", Amount = 1, Unit = "Stk", Category = "Gemüse & Obst" },
+                    new() { Name = "Vollkornbrot Scheiben", SearchTerm = "Vollkornbrot", Amount = 140, Unit = "g", Category = "Brot & Gebäck" },
+                    new() { Name = "Bio-Eier", SearchTerm = "Eier", Amount = 2, Unit = "Stk", Category = "Milchprodukte & Eier" },
+                    new() { Name = "Zitrone & Gartenkresse", SearchTerm = "Zitrone", Amount = 1, Unit = "Stk", Category = "Gemüse & Obst" }
+                }
+            },
+
+            // --- 41. Griechisches Joghurt mit Feigen & Nüssen ---
+            new Meal
+            {
+                Id = "joghurt-feigen-honig",
+                Name = "Griechisches Joghurt mit gerösteten Nüssen & Waldhonig",
+                Description = "Proteinreiches Naturjoghurt 10%, garniert mit frischen Feigen oder Beeren, knackigen Walnüssen, Zimt und bestem österreichischem Honig.",
+                Category = "Frühstück",
+                Tags = new() { "breakfast", "vegetarian", "healthy", "quick" },
+                Allergens = new() { "lactose", "nuts" },
+                PrepTimeMinutes = 5,
+                Difficulty = "Einfach",
+                Emoji = "🍯",
+                DefaultServings = 2,
+                Nutrition = new() { Calories = 410, Protein = 21, Carbs = 34, Fat = 22, Fiber = 4 },
+                Ingredients = new()
+                {
+                    new() { Name = "Griechisches Joghurt 10%", SearchTerm = "Griechisches Joghurt", Amount = 300, Unit = "g", Category = "Milchprodukte & Eier" },
+                    new() { Name = "Frische Feigen oder Erdbeeren", SearchTerm = "Erdbeeren", Amount = 150, Unit = "g", Category = "Gemüse & Obst" },
+                    new() { Name = "Walnusskerne", SearchTerm = "Walnüsse", Amount = 40, Unit = "g", Category = "Vorratsschrank" },
+                    new() { Name = "Blütenhonig", SearchTerm = "Honig", Amount = 30, Unit = "g", Category = "Vorratsschrank" }
+                }
+            },
+
+            // --- 42. Alpen-Omelett mit Spinat & Bergkäse ---
+            new Meal
+            {
+                Id = "spinat-bergkaese-omelett",
+                Name = "Alpen-Omelett mit Babyspinat, Champignons & Bergkäse",
+                Description = "Flaumiges Bio-Eier-Omelett aus der Gusseisenpfanne, gefüllt mit frischem Babyspinat, Champignons und geschmolzenem würzigem Bergkäse.",
+                Category = "Frühstück",
+                Tags = new() { "breakfast", "austrian", "vegetarian", "healthy" },
+                Allergens = new() { "egg", "lactose" },
+                PrepTimeMinutes = 15,
+                Difficulty = "Einfach",
+                Emoji = "🧀",
+                DefaultServings = 2,
+                Nutrition = new() { Calories = 470, Protein = 32, Carbs = 12, Fat = 33, Fiber = 4 },
+                Ingredients = new()
+                {
+                    new() { Name = "Bio-Eier", SearchTerm = "Eier", Amount = 4, Unit = "Stk", Category = "Milchprodukte & Eier" },
+                    new() { Name = "Babyspinat frisch", SearchTerm = "Babyspinat", Amount = 150, Unit = "g", Category = "Gemüse & Obst" },
+                    new() { Name = "Champignons braun", SearchTerm = "Champignons", Amount = 150, Unit = "g", Category = "Gemüse & Obst" },
+                    new() { Name = "Vorarlberger Bergkäse", SearchTerm = "Bergkäse", Amount = 80, Unit = "g", Category = "Milchprodukte & Eier" },
+                    new() { Name = "Teebutter", SearchTerm = "Teebutter", Amount = 20, Unit = "g", Category = "Milchprodukte & Eier" }
                 }
             }
         };
