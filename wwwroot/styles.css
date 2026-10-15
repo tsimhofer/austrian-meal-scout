@@ -1,0 +1,152 @@
+/* Austrian Meal Scout Custom Styles */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --at-red: #ED2939;
+  --at-red-dark: #C91D2B;
+  --spar-green: #008751;
+  --billa-yellow: #FFCC00;
+  --billa-red: #D71920;
+  --hofer-blue: #002B49;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: #F8FAFC;
+  color: #0F172A;
+}
+
+/* Glassmorphism effects */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Store badge accents */
+.badge-spar {
+  background-color: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+}
+.badge-billa {
+  background-color: #FEF9C3;
+  color: #854D0E;
+  border: 1px solid #FDE047;
+}
+.badge-hofer {
+  background-color: #EFF6FF;
+  color: #1E40AF;
+  border: 1px solid #BFDBFE;
+}
+
+/* Product Card animations */
+.meal-card {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.meal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -10px rgba(15, 23, 42, 0.12);
+}
+
+/* Shopping Item checked state */
+.shopping-item.checked {
+  opacity: 0.55;
+}
+.shopping-item.checked .item-text {
+  text-decoration: line-through;
+}
+
+/* Animations */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.animate-pulse-subtle {
+  animation: pulse-subtle 1.8s ease-in-out infinite;
+}
+
+/* Nutrition highlight pill */
+.nutrition-pill {
+  font-feature-settings: "tnum";
+}
+
+/* ==========================================================================
+   A4 PRINT STYLES - STRICTLY FITS ON EXACTLY ONE A4 PAGE
+   ========================================================================== */
+#printable-a4-plan {
+  display: none;
+}
+
+@page {
+  size: A4 portrait;
+  margin: 6mm 8mm;
+}
+
+@media print {
+  html, body {
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    padding: 0;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 11px;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide entire interactive web app */
+  header, main, #recipe-modal, #toast, .no-print, button, nav {
+    display: none !important;
+  }
+
+  /* Show only the A4 printable plan */
+  #printable-a4-plan {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 194mm;
+    height: 283mm;
+    max-height: 283mm;
+    margin: 0 auto;
+    padding: 0;
+    box-sizing: border-box;
+    overflow: hidden !important;
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
+    page-break-before: avoid !important;
+  }
+
+  .print-table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  .print-table th, .print-table td {
+    padding: 5px 6px;
+    border: 1px solid #cbd5e1;
+  }
+
+  .print-day-row {
+    height: 27mm;
+    max-height: 27mm;
+  }
+}
